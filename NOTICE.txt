@@ -1,4 +1,6 @@
-maven dependency-versions-check plugin
+dependency-versions-check maven-plugin
+
 (C) 2010 Ning, Inc.
+(C) 2011 Henning Schmiedehausen
 
 Licensed under the Apache License Version 2.0

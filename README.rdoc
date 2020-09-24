@@ -245,13 +245,13 @@ prefixes (i.e. r08 can replace r07).
 == Writing your own strategies (advanced usage)
 
 A custom strategy must implement the
-com.ning.maven.plugins.dependencyversionscheck.strategy.Strategy
+Strategy
 interface and must declare itself as a plexus component. A jar
 containing a custom strategy can then used as a custom dependency of
 the plugin:
 
     /**
-     * @plexus.component role="com.ning.maven.plugins.dependencyversionscheck.strategy.Strategy" role-hint="bad"
+     * @plexus.component role="Strategy" role-hint="bad"
      */
     public class BadStrategy implements Strategy
     {
