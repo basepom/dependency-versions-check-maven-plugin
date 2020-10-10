@@ -48,8 +48,8 @@ public final class StrategyCache
 
         final ImmutableMap.Builder<QualifiedNameMatcher, Strategy> builder = ImmutableMap.builder();
         Arrays.stream(resolvers).forEach(r -> {
-            final Strategy strategy = strategyProvider.forName(r.getStrategyName());
-            checkState(strategy != null, "Could not locate version strategy %s! Check for typos!", r.getStrategyName());
+            final Strategy strategy = strategyProvider.forName(r.getStrategy());
+            checkState(strategy != null, "Could not locate version strategy %s! Check for typos!", r.getStrategy());
             r.getIncludes().forEach(include -> builder.put(include, strategy));
         });
         this.resolverPatterns = builder.build();

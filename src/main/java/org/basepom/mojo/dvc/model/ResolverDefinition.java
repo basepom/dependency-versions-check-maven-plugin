@@ -26,12 +26,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public final class ResolverDefinition
 {
-    private String strategyName = "";
+    private String strategy = "";
     private ImmutableList<QualifiedNameMatcher> includes = ImmutableList.of();
 
-    public void setStrategyName(final String strategyName)
+    public void setStrategy(final String strategy)
     {
-        this.strategyName = checkNotNull(strategyName, "strategyName is null");
+        this.strategy = checkNotNull(strategy, "strategyName is null");
     }
 
     public void setIncludes(final String[] includes)
@@ -45,9 +45,9 @@ public final class ResolverDefinition
         this.includes = builder.build();
     }
 
-    public String getStrategyName()
+    public String getStrategy()
     {
-        return strategyName;
+        return strategy;
     }
 
     public ImmutableList<QualifiedNameMatcher> getIncludes()
@@ -65,21 +65,21 @@ public final class ResolverDefinition
             return false;
         }
         ResolverDefinition that = (ResolverDefinition) o;
-        return strategyName.equals(that.strategyName) &&
+        return strategy.equals(that.strategy) &&
                 includes.equals(that.includes);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(strategyName, includes);
+        return Objects.hash(strategy, includes);
     }
 
     @Override
     public String toString()
     {
         return MoreObjects.toStringHelper(this)
-                .add("strategyName", strategyName)
+                .add("strategy", strategy)
                 .add("includes", includes)
                 .toString();
     }
