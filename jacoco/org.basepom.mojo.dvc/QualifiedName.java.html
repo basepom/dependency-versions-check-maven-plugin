@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QualifiedName.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dependency-versions-check-maven-plugin</a> &gt; <a href="index.source.html" class="el_package">org.basepom.mojo.dvc</a> &gt; <span class="el_source">QualifiedName.java</span></div><h1>QualifiedName.java</h1><pre class="source lang-java linenums">/*
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.basepom.mojo.dvc;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
+import org.apache.maven.RepositoryUtils;
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.project.MavenProject;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
+
+import java.util.Objects;
+import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
+/**
+ * A qualified name for a dependency or artifact. This is everything but a version.
+ */
+public final class QualifiedName
+        implements Comparable&lt;QualifiedName&gt;
+{
+    private final String groupId;
+    private final String artifactId;
+    private final String type;
+    private final String classifier;
+
+    public static QualifiedName fromDependencyNode(final DependencyNode dependencyNode)
+    {
+<span class="nc" id="L45">        checkNotNull(dependencyNode, &quot;dependency is null&quot;);</span>
+<span class="nc" id="L46">        return fromArtifact(RepositoryUtils.toArtifact(dependencyNode.getArtifact()));</span>
+    }
+
+    public static QualifiedName fromDependency(final Dependency dependency)
+    {
+<span class="nc" id="L51">        checkNotNull(dependency, &quot;dependency is null&quot;);</span>
+<span class="nc" id="L52">        return fromArtifact(RepositoryUtils.toArtifact(dependency.getArtifact()));</span>
+    }
+
+    public static QualifiedName fromArtifact(final Artifact artifact)
+    {
+<span class="nc" id="L57">        checkNotNull(artifact, &quot;artifact is null&quot;);</span>
+
+<span class="nc" id="L59">        return new QualifiedName(artifact.getGroupId(),</span>
+<span class="nc" id="L60">                artifact.getArtifactId(),</span>
+<span class="nc" id="L61">                artifact.getType(),</span>
+<span class="nc" id="L62">                artifact.getClassifier());</span>
+    }
+
+    public static QualifiedName fromProject(final MavenProject project)
+    {
+<span class="nc" id="L67">        checkNotNull(project, &quot;project is null&quot;);</span>
+
+<span class="nc" id="L69">        return new QualifiedName(project.getGroupId(),</span>
+<span class="nc" id="L70">                project.getArtifactId(),</span>
+                null,
+                null);
+    }
+
+    @VisibleForTesting
+    QualifiedName(String groupId, String artifactId, String type, String classifier)
+<span class="fc" id="L77">    {</span>
+<span class="fc" id="L78">        this.groupId = checkNotNull(groupId, &quot;groupId is null&quot;);</span>
+<span class="fc" id="L79">        this.artifactId = checkNotNull(artifactId, &quot;artifactId is null&quot;);</span>
+<span class="fc" id="L80">        this.type = type;</span>
+<span class="fc" id="L81">        this.classifier = classifier;</span>
+
+<span class="fc bfc" id="L83" title="All 4 branches covered.">        checkState(classifier == null || type != null, &quot;Classifier must be null if type is null&quot;);</span>
+<span class="fc" id="L84">    }</span>
+
+    public String getGroupId()
+    {
+<span class="fc" id="L88">        return groupId;</span>
+    }
+
+    public String getArtifactId()
+    {
+<span class="fc" id="L93">        return artifactId;</span>
+    }
+
+    public Optional&lt;String&gt; getType()
+    {
+<span class="fc" id="L98">        return Optional.ofNullable(type);</span>
+    }
+
+    public Optional&lt;String&gt; getClassifier()
+    {
+<span class="fc" id="L103">        return Optional.ofNullable(classifier);</span>
+    }
+
+    /**
+     * True if this qualified name refers to a test artifact.
+     */
+    public boolean hasTests()
+    {
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        return getType().map(t -&gt; t.equals(&quot;test-jar&quot;)).orElse(false)</span>
+<span class="pc bpc" id="L112" title="1 of 4 branches missed.">                || (getClassifier().map(c -&gt; c.equals(&quot;tests&quot;)).orElse(false) &amp;&amp; getType().map(t -&gt; t.equals(&quot;jar&quot;)).orElse(false));</span>
+    }
+
+    /**
+     * Returns full name (group, artifact, type, classifier). Normalizes any test jar to be group:artifact:jar:tests.
+     */
+    public String getFullName()
+    {
+<span class="fc" id="L120">        ImmutableList.Builder&lt;String&gt; builder = ImmutableList.builder();</span>
+<span class="fc" id="L121">        builder.add(getGroupId()).add(getArtifactId());</span>
+
+<span class="fc" id="L123">        getType().ifPresent(t -&gt; builder.add(t));</span>
+<span class="fc" id="L124">        getClassifier().ifPresent(t -&gt; builder.add(t));</span>
+<span class="fc" id="L125">        return Joiner.on(':').join(builder.build());</span>
+    }
+
+    /**
+     * Returns short name (group, artifact, optional classifier). Skips absent classifiers. Normalizes test jars to `tests` classifier.
+     */
+    public String getShortName()
+    {
+<span class="nc" id="L133">        String result = Joiner.on(':').skipNulls()</span>
+<span class="nc" id="L134">                .join(getGroupId(),</span>
+<span class="nc" id="L135">                        getArtifactId());</span>
+
+<span class="nc bnc" id="L137" title="All 2 branches missed.">        String classifier = hasTests() ? &quot;tests&quot; : getClassifier().orElse(&quot;&quot;);</span>
+
+<span class="nc bnc" id="L139" title="All 2 branches missed.">        if (!classifier.isEmpty()) {</span>
+<span class="nc" id="L140">            result = result + &quot; (&quot; + classifier + &quot;)&quot;;</span>
+        }
+
+<span class="nc" id="L143">        return result;</span>
+    }
+
+    public int length()
+    {
+<span class="nc" id="L148">        return getShortName().length();</span>
+    }
+
+    public String getMinimalName()
+    {
+<span class="fc" id="L153">        return Joiner.on(':')</span>
+<span class="fc" id="L154">                .join(getGroupId(), getArtifactId());</span>
+    }
+
+    @Override
+    public boolean equals(final Object o)
+    {
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">        if (this == o) {</span>
+<span class="nc" id="L161">            return true;</span>
+        }
+<span class="pc bpc" id="L163" title="2 of 4 branches missed.">        if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L164">            return false;</span>
+        }
+<span class="fc" id="L166">        QualifiedName that = (QualifiedName) o;</span>
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">        if (Objects.equals(groupId, that.groupId) &amp;&amp;</span>
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">                Objects.equals(artifactId, that.artifactId)) {</span>
+
+            // Two test artifacts test equal
+<span class="pc bpc" id="L171" title="1 of 4 branches missed.">            if (hasTests() &amp;&amp; ((QualifiedName) o).hasTests()) {</span>
+<span class="fc" id="L172">                return true;</span>
+            }
+
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">            return Objects.equals(getType().orElse(&quot;jar&quot;), that.getType().orElse(&quot;jar&quot;)) &amp;&amp;</span>
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">                    Objects.equals(getClassifier().orElse(&quot;&quot;), that.getClassifier().orElse(&quot;&quot;));</span>
+        }
+
+<span class="nc" id="L179">        return false;</span>
+    }
+
+    @Override
+    public int hashCode()
+    {
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        if (hasTests()) {</span>
+<span class="fc" id="L186">            return Objects.hash(groupId, artifactId, &quot;test-jar&quot;, &quot;tests&quot;);</span>
+        }
+        else {
+<span class="fc" id="L189">            return Objects.hash(groupId, artifactId, getType().orElse(&quot;jar&quot;), getClassifier().orElse(&quot;&quot;));</span>
+        }
+    }
+
+    @Override
+    public String toString()
+    {
+<span class="nc" id="L196">        return MoreObjects.toStringHelper(this)</span>
+<span class="nc" id="L197">                .add(&quot;groupId&quot;, groupId)</span>
+<span class="nc" id="L198">                .add(&quot;artifactId&quot;, artifactId)</span>
+<span class="nc" id="L199">                .add(&quot;type&quot;, type)</span>
+<span class="nc" id="L200">                .add(&quot;classifier&quot;, classifier)</span>
+<span class="nc" id="L201">                .toString();</span>
+    }
+
+    @Override
+    public int compareTo(final QualifiedName other)
+    {
+<span class="pc bpc" id="L207" title="1 of 2 branches missed.">        if (other == null) {</span>
+<span class="nc" id="L208">            return 1;</span>
+        }
+<span class="pc bpc" id="L210" title="2 of 4 branches missed.">        else if (other == this || equals(other)) {</span>
+<span class="fc" id="L211">            return 0;</span>
+        }
+        else {
+<span class="nc" id="L214">            return getMinimalName().compareTo(other.getMinimalName());</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

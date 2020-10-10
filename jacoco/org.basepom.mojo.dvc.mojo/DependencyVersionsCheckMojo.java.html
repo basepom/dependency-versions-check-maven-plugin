@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DependencyVersionsCheckMojo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dependency-versions-check-maven-plugin</a> &gt; <a href="index.source.html" class="el_package">org.basepom.mojo.dvc.mojo</a> &gt; <span class="el_source">DependencyVersionsCheckMojo.java</span></div><h1>DependencyVersionsCheckMojo.java</h1><pre class="source lang-java linenums">/*
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.basepom.mojo.dvc.mojo;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Maps;
+import org.apache.maven.artifact.versioning.ComparableVersion;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.shared.utils.logging.MessageBuilder;
+import org.apache.maven.shared.utils.logging.MessageUtils;
+import org.basepom.mojo.dvc.AbstractDependencyVersionsMojo;
+import org.basepom.mojo.dvc.QualifiedName;
+import org.basepom.mojo.dvc.dependency.DependencyMap;
+import org.basepom.mojo.dvc.strategy.Strategy;
+import org.basepom.mojo.dvc.version.VersionResolutionCollection;
+import org.basepom.mojo.dvc.version.VersionResolutionElement;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.version.Version;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.function.Function;
+
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableSetMultimap.toImmutableSetMultimap;
+
+/**
+ * Resolves all dependencies of a project and reports version conflicts.
+ */
+@Mojo(name = &quot;check&quot;, requiresProject = true, threadSafe = true, defaultPhase = LifecyclePhase.VERIFY, requiresDependencyResolution = ResolutionScope.NONE)
+<span class="nc" id="L49">public class DependencyVersionsCheckMojo</span>
+        extends AbstractDependencyVersionsMojo
+{
+    /**
+     * Whether to list all dependencies or only dependencies in conflict. Default is to list all dependencies.
+     */
+<span class="nc" id="L55">    @Parameter(defaultValue = &quot;true&quot;, property = &quot;dvc.conflict-only&quot;)</span>
+    public boolean conflictOnly = true;
+
+    /**
+     * Whether the mojo should fail the build if a conflict was found. Any conflict (direct and transitive) will cause a failure.
+     * This is equivalent to setting both &quot;directConflictFailsBuild&quot; and &quot;transitiveConflictFailsBuild&quot;.
+     *
+     * @deprecated Use &quot;directConflictFailsBuild&quot; and &quot;transitiveConflictFailsBuild&quot; instead. This will be removed in version 4.0.0 of the plugin.
+     */
+<span class="nc" id="L64">    @Deprecated</span>
+    @Parameter(defaultValue = &quot;false&quot;, alias = &quot;failBuildInCaseOfConflict&quot;, property = &quot;dvc.conflict-fails-build&quot;)
+    protected boolean conflictFailsBuild = false;
+
+    /**
+     * Fail the build if a version conflict involves one or more direct dependencies. As these versions are controlled by the
+     * project itself, it is strongly recommended to review and fix these conflicts.
+     *
+     * @since 3.0.0
+     */
+<span class="nc" id="L74">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.direct-conflict-fails-build&quot;)</span>
+    protected boolean directConflictFailsBuild = false;
+
+    /**
+     * Fail the build even if a version conflict happens between transitive dependencies only. While such conflicts can be resolved by adding
+     * a &amp;lt;dependencyManagement&amp;gt; section to the project POM, they are often outside the control of a project and cause the POM to be cluttered
+     * with dependency versions that are not actually used directly in a project.
+     */
+<span class="nc" id="L82">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.transitive-conflict-fails-build&quot;)</span>
+    protected boolean transitiveConflictFailsBuild = false;
+
+    protected void doExecute(final ImmutableSetMultimap&lt;QualifiedName, VersionResolutionCollection&gt; resolutionMap, final DependencyMap rootDependencyMap)
+            throws Exception
+    {
+<span class="nc" id="L88">        final ImmutableMap&lt;QualifiedName, DependencyNode&gt; rootDependencies = rootDependencyMap.getAllDependencies();</span>
+
+        // filter out what to display.
+<span class="nc" id="L91">        final ImmutableMap&lt;QualifiedName, Collection&lt;VersionResolutionCollection&gt;&gt; filteredMap = ImmutableMap.copyOf(Maps.filterValues(</span>
+<span class="nc" id="L92">                resolutionMap.asMap(),</span>
+                v -&gt; {
+                    // report if no condition is set.
+<span class="nc" id="L95">                    boolean report = true;</span>
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                    if (conflictOnly) {</span>
+                        // do not report if conflicts are requested but none exists
+<span class="nc" id="L99">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasConflict);</span>
+                    }
+<span class="nc bnc" id="L101" title="All 2 branches missed.">                    if (directOnly) {</span>
+                        // do not report if only directs are requested but it is not direct
+<span class="nc" id="L103">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasDirectDependencies);</span>
+                    }
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">                    if (managedOnly) {</span>
+<span class="nc" id="L107">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasManagedDependencies);</span>
+                    }
+
+<span class="nc" id="L110">                    return report;</span>
+                }));
+
+<span class="nc" id="L113">        boolean directConflicts = false;</span>
+<span class="nc" id="L114">        boolean transitiveConflicts = false;</span>
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">        if (filteredMap.isEmpty()) {</span>
+<span class="nc" id="L117">            return;</span>
+        }
+
+<span class="nc" id="L120">        LOG.info(&quot;Checking %s%s dependencies for '%s' scope%s&quot;,</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">                (directOnly ? &quot;direct&quot; : &quot;all&quot;),</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">                (managedOnly ? &quot;, managed&quot; : &quot;&quot;),</span>
+                scope,
+<span class="nc bnc" id="L124" title="All 2 branches missed.">                (conflictOnly ? &quot;, reporting only conflicts&quot; : &quot;&quot;));</span>
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        for (final Map.Entry&lt;QualifiedName, Collection&lt;VersionResolutionCollection&gt;&gt; entry : filteredMap.entrySet()) {</span>
+<span class="nc" id="L127">            final ImmutableSetMultimap&lt;ComparableVersion, VersionResolutionCollection&gt; versionMap = entry.getValue().stream()</span>
+<span class="nc" id="L128">                    .collect(toImmutableSetMultimap(VersionResolutionCollection::getExpectedVersion, Function.identity()));</span>
+
+<span class="nc" id="L130">            boolean willWarn = false;</span>
+<span class="nc" id="L131">            boolean willFail = false;</span>
+
+<span class="nc" id="L133">            final boolean isDirect = entry.getValue().stream().anyMatch(VersionResolutionCollection::hasDirectDependencies);</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">            final boolean isManaged = (rootDependencies.get(entry.getKey()).getManagedBits() &amp; DependencyNode.MANAGED_VERSION) != 0;</span>
+
+<span class="nc" id="L136">            final Version dependencyVersion = rootDependencies.get(entry.getKey()).getVersion();</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">            checkState(dependencyVersion != null, &quot;Dependency Version for %s is null! File a bug!&quot;, rootDependencies.get(entry.getKey()));</span>
+<span class="nc" id="L138">            final ComparableVersion resolvedVersion = new ComparableVersion(dependencyVersion.toString());</span>
+
+<span class="nc" id="L140">            final QualifiedName dependencyName = entry.getKey();</span>
+<span class="nc" id="L141">            final Strategy strategy = strategyCache.forQualifiedName(dependencyName);</span>
+
+<span class="nc" id="L143">            final MessageBuilder mb = MessageUtils.buffer();</span>
+
+<span class="nc" id="L145">            mb.strong(dependencyName.getShortName())</span>
+<span class="nc" id="L146">                    .a(&quot;: &quot;)</span>
+<span class="nc" id="L147">                    .strong(resolvedVersion)</span>
+<span class="nc" id="L148">                    .format(&quot; (%s%s) - scope: %s - strategy: %s&quot;,</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">                            isDirect ? &quot;direct&quot; : &quot;transitive&quot;,</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">                            isManaged ? &quot;, managed&quot; : &quot;&quot;,</span>
+<span class="nc" id="L151">                            rootDependencies.get(dependencyName).getDependency().getScope(),</span>
+<span class="nc" id="L152">                            strategy.getName()</span>
+                    )
+<span class="nc" id="L154">                    .newline();</span>
+
+<span class="nc" id="L156">            final int versionPadding = versionMap.keySet().stream().map(v -&gt; v.toString().length()).reduce(0, Math::max);</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">            for (final Map.Entry&lt;ComparableVersion, Collection&lt;VersionResolutionCollection&gt;&gt; versionEntry : versionMap.asMap().entrySet()) {</span>
+<span class="nc" id="L158">                final boolean hasConflictVersion = versionEntry.getValue().stream().anyMatch(VersionResolutionCollection::hasConflict);</span>
+<span class="nc" id="L159">                final boolean perfectMatch = versionEntry.getValue().stream().anyMatch(v -&gt; v.isMatchFor(resolvedVersion));</span>
+<span class="nc" id="L160">                final String paddedVersion = Strings.padEnd(versionEntry.getKey().toString(), versionPadding + 1, ' ');</span>
+
+<span class="nc" id="L162">                mb.a(&quot;       &quot;);</span>
+
+<span class="nc bnc" id="L164" title="All 2 branches missed.">                if (hasConflictVersion) {</span>
+<span class="nc" id="L165">                    mb.failure(paddedVersion);</span>
+                }
+<span class="nc bnc" id="L167" title="All 2 branches missed.">                else if (perfectMatch) {</span>
+<span class="nc" id="L168">                    mb.success(paddedVersion);</span>
+                }
+                else {
+<span class="nc" id="L171">                    mb.a(paddedVersion);</span>
+                }
+
+<span class="nc" id="L174">                mb.a(&quot;expected by &quot;);</span>
+
+<span class="nc" id="L176">                for (Iterator&lt;VersionResolutionElement&gt; it = versionEntry.getValue().stream()</span>
+<span class="nc" id="L177">                        .flatMap(v -&gt; v.getRequestingDependencies().stream())</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">                        .iterator(); it.hasNext(); ) {</span>
+<span class="nc" id="L179">                    final VersionResolutionElement versionResolutionElement = it.next();</span>
+<span class="nc" id="L180">                    final String name = versionResolutionElement.getRequestingDependency().getShortName();</span>
+
+<span class="nc bnc" id="L182" title="All 2 branches missed.">                    if (versionResolutionElement.isDirectDependency()) {</span>
+<span class="nc" id="L183">                        mb.strong(&quot;*&quot; + name + &quot;*&quot;);</span>
+                    }
+                    else {
+<span class="nc" id="L186">                        mb.a(name);</span>
+                    }
+<span class="nc bnc" id="L188" title="All 2 branches missed.">                    if (it.hasNext()) {</span>
+<span class="nc" id="L189">                        mb.a(&quot;, &quot;);</span>
+                    }
+<span class="nc" id="L191">                }</span>
+
+<span class="nc" id="L193">                mb.newline();</span>
+
+<span class="nc bnc" id="L195" title="All 2 branches missed.">                if (hasConflictVersion) {</span>
+<span class="nc" id="L196">                    willWarn = true;</span>
+<span class="nc bnc" id="L197" title="All 8 branches missed.">                    willFail |= (isDirect ? directConflictFailsBuild : transitiveConflictFailsBuild) || conflictFailsBuild;</span>
+
+<span class="nc" id="L199">                    directConflicts |= isDirect;       // any direct dependency in conflict</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">                    transitiveConflicts |= !isDirect;  // any transitive dependency in conflict</span>
+                }
+<span class="nc" id="L202">            }</span>
+
+<span class="nc bnc" id="L204" title="All 2 branches missed.">            if (willFail) {</span>
+<span class="nc" id="L205">                LOG.error(&quot;%s&quot;, mb);</span>
+            }
+<span class="nc bnc" id="L207" title="All 2 branches missed.">            else if (willWarn) {</span>
+<span class="nc" id="L208">                LOG.warn(&quot;%s&quot;, mb);</span>
+            }
+            else {
+<span class="nc" id="L211">                LOG.info(&quot;%s&quot;, mb);</span>
+            }
+<span class="nc" id="L213">        }</span>
+
+<span class="nc bnc" id="L215" title="All 6 branches missed.">        if (directConflicts &amp;&amp; (conflictFailsBuild || directConflictFailsBuild)) {</span>
+<span class="nc" id="L216">            throw new MojoFailureException(&quot;Version conflict in direct dependencies detected!&quot;);</span>
+        }
+
+<span class="nc bnc" id="L219" title="All 6 branches missed.">        if (transitiveConflicts &amp;&amp; (conflictFailsBuild || transitiveConflictFailsBuild)) {</span>
+<span class="nc" id="L220">            throw new MojoFailureException(&quot;Version conflict in transitive dependencies detected!&quot;);</span>
+        }
+<span class="nc" id="L222">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
