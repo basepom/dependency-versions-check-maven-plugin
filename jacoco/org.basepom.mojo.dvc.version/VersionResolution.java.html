@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VersionResolution.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dependency-versions-check-maven-plugin</a> &gt; <a href="index.source.html" class="el_package">org.basepom.mojo.dvc.version</a> &gt; <span class="el_source">VersionResolution.java</span></div><h1>VersionResolution.java</h1><pre class="source lang-java linenums">/*
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.basepom.mojo.dvc.version;
+
+import com.google.common.base.MoreObjects;
+import org.apache.maven.artifact.versioning.ComparableVersion;
+import org.basepom.mojo.dvc.QualifiedName;
+
+import java.util.Objects;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
+public final class VersionResolution
+{
+    /**
+     * The dependencies that requests this specific version resolution.
+     */
+    private final VersionResolutionElement requestingDependency;
+
+    /**
+     * The version expected by the requesting dependency.
+     */
+    private final ComparableVersion expectedVersion;
+
+    public static VersionResolution forDirectDependency(final QualifiedName requestingDependency,
+            final ComparableVersion expectedVersion,
+            final boolean managedDependency)
+    {
+<span class="nc" id="L40">        return new VersionResolution(requestingDependency, expectedVersion, managedDependency, true);</span>
+    }
+
+    public static VersionResolution forTransitiveDependency(final QualifiedName requestingDependency,
+            final ComparableVersion expectedVersion,
+            final boolean managedDependency)
+    {
+<span class="nc" id="L47">        return new VersionResolution(requestingDependency, expectedVersion, managedDependency, false);</span>
+    }
+
+    private VersionResolution(
+            final QualifiedName requestingDependency,
+            final ComparableVersion expectedVersion,
+            final boolean manageDependency,
+            final boolean directDependency)
+<span class="nc" id="L55">    {</span>
+<span class="nc" id="L56">        checkNotNull(requestingDependency, &quot;requestingDependencyName is null&quot;);</span>
+<span class="nc" id="L57">        this.requestingDependency = new VersionResolutionElement(requestingDependency, manageDependency, directDependency);</span>
+<span class="nc" id="L58">        this.expectedVersion = checkNotNull(expectedVersion, &quot;expectedVersion is null&quot;);</span>
+<span class="nc" id="L59">    }</span>
+
+    public VersionResolutionElement getRequestingDependency()
+    {
+<span class="nc" id="L63">        return requestingDependency;</span>
+    }
+
+    public ComparableVersion getExpectedVersion()
+    {
+<span class="nc" id="L68">        return expectedVersion;</span>
+    }
+
+    public void conflict()
+    {
+<span class="nc" id="L73">        requestingDependency.conflict();</span>
+<span class="nc" id="L74">    }</span>
+
+    @Override
+    public boolean equals(final Object o)
+    {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        if (this == o) {</span>
+<span class="nc" id="L80">            return true;</span>
+        }
+<span class="nc bnc" id="L82" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L83">            return false;</span>
+        }
+<span class="nc" id="L85">        final VersionResolution that = (VersionResolution) o;</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        return requestingDependency.equals(that.requestingDependency) &amp;&amp;</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">                expectedVersion.equals(that.expectedVersion);</span>
+    }
+
+    @Override
+    public int hashCode()
+    {
+<span class="nc" id="L93">        return Objects.hash(requestingDependency, expectedVersion);</span>
+    }
+
+    @Override
+    public String toString()
+    {
+<span class="nc" id="L99">        return MoreObjects.toStringHelper(this)</span>
+<span class="nc" id="L100">                .add(&quot;requestingDependency&quot;, requestingDependency)</span>
+<span class="nc" id="L101">                .add(&quot;expectedVersion&quot;, expectedVersion)</span>
+<span class="nc" id="L102">                .toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DependencyVersionsListMojo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dependency-versions-check-maven-plugin</a> &gt; <a href="index.source.html" class="el_package">org.basepom.mojo.dvc.mojo</a> &gt; <span class="el_source">DependencyVersionsListMojo.java</span></div><h1>DependencyVersionsListMojo.java</h1><pre class="source lang-java linenums">/*
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.basepom.mojo.dvc.mojo;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import org.apache.maven.artifact.versioning.ComparableVersion;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.shared.utils.logging.MessageBuilder;
+import org.apache.maven.shared.utils.logging.MessageUtils;
+import org.basepom.mojo.dvc.AbstractDependencyVersionsMojo;
+import org.basepom.mojo.dvc.QualifiedName;
+import org.basepom.mojo.dvc.dependency.DependencyMap;
+import org.basepom.mojo.dvc.version.VersionResolutionCollection;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.version.Version;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+
+import static com.google.common.base.Preconditions.checkState;
+
+/**
+ * Resolves all dependencies of a project and lists all versions for any artifact and what version was chosen by the resolver.
+ *
+ * @since 2.0.0
+ */
+@Mojo(name = &quot;list&quot;, requiresProject = true, threadSafe = true, requiresDependencyResolution = ResolutionScope.NONE, defaultPhase = LifecyclePhase.VERIFY)
+<span class="nc" id="L48">public final class DependencyVersionsListMojo</span>
+        extends AbstractDependencyVersionsMojo
+{
+    /**
+     * Whether to list all dependencies or only dependencies in conflict. Default is to list all dependencies.
+     */
+<span class="nc" id="L54">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.conflict-only&quot;)</span>
+    public boolean conflictOnly = false;
+
+    @Override
+    protected void doExecute(final ImmutableSetMultimap&lt;QualifiedName, VersionResolutionCollection&gt; resolutionMap, final DependencyMap rootDependencyMap)
+            throws Exception
+    {
+<span class="nc" id="L61">        final ImmutableMap&lt;QualifiedName, DependencyNode&gt; rootDependencies = rootDependencyMap.getAllDependencies();</span>
+<span class="nc" id="L62">        createLog(resolutionMap, rootDependencies);</span>
+<span class="nc" id="L63">    }</span>
+
+    private void createLog(final ImmutableSetMultimap&lt;QualifiedName, VersionResolutionCollection&gt; resolutionMap,
+            final ImmutableMap&lt;QualifiedName, DependencyNode&gt; rootDependencies)
+    {
+<span class="nc" id="L68">        final ImmutableMap&lt;QualifiedName, Collection&lt;VersionResolutionCollection&gt;&gt; filteredMap = ImmutableMap.copyOf(Maps.filterValues(</span>
+<span class="nc" id="L69">                resolutionMap.asMap(),</span>
+                v -&gt; {
+                    // report if no condition is set.
+<span class="nc" id="L72">                    boolean report = true;</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">                    if (conflictOnly) {</span>
+                        // do not report if conflicts are requested but none exists
+<span class="nc" id="L76">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasConflict);</span>
+                    }
+<span class="nc bnc" id="L78" title="All 2 branches missed.">                    if (directOnly) {</span>
+                        // do not report if only directs are requested but it is not direct
+<span class="nc" id="L80">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasDirectDependencies);</span>
+                    }
+
+<span class="nc bnc" id="L83" title="All 2 branches missed.">                    if (managedOnly) {</span>
+<span class="nc" id="L84">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasManagedDependencies);</span>
+                    }
+
+<span class="nc" id="L87">                    return report;</span>
+                }));
+
+        // calculate padding for columnar output
+<span class="nc" id="L91">        final int namePadding = filteredMap.keySet().stream()</span>
+<span class="nc" id="L92">                .map(QualifiedName::length).reduce(0, Math::max);</span>
+<span class="nc" id="L93">        final int scopePadding = rootDependencies.entrySet().stream()</span>
+<span class="nc" id="L94">                .filter(e -&gt; filteredMap.containsKey(e.getKey()))</span>
+<span class="nc" id="L95">                .map(e -&gt; e.getValue().getDependency().getScope().length()).reduce(0, Math::max);</span>
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        if (filteredMap.isEmpty()) {</span>
+<span class="nc" id="L98">            return;</span>
+        }
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        LOG.info(&quot;%s dependencies for '%s' scope:&quot;, (directOnly ? &quot;Direct&quot; : &quot;All&quot;), scope);</span>
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        for (final Map.Entry&lt;QualifiedName, Collection&lt;VersionResolutionCollection&gt;&gt; entry : filteredMap.entrySet()) {</span>
+<span class="nc" id="L104">            final QualifiedName dependencyName = entry.getKey();</span>
+<span class="nc" id="L105">            final ImmutableSortedSet&lt;VersionResolutionCollection&gt; resolutions = ImmutableSortedSet.copyOf(entry.getValue());</span>
+
+<span class="nc" id="L107">            final MessageBuilder mb = MessageUtils.buffer();</span>
+
+<span class="nc" id="L109">            mb.a(Strings.padEnd(dependencyName.getShortName() + &quot;: &quot;, namePadding + 2, ' '))</span>
+<span class="nc" id="L110">                    .a(Strings.padEnd(rootDependencies.get(dependencyName).getDependency().getScope(), scopePadding + 1, ' '));</span>
+
+            // fetch the resolved version from the dependency in the tree.
+<span class="nc" id="L113">            final Version dependencyVersion = rootDependencies.get(entry.getKey()).getVersion();</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">            checkState(dependencyVersion != null, &quot;Dependency Version for %s is null! File a bug!&quot;, rootDependencies.get(entry.getKey()));</span>
+<span class="nc" id="L115">            final ComparableVersion actualVersion = new ComparableVersion(dependencyVersion.toString());</span>
+
+<span class="nc" id="L117">            final boolean isDirect = resolutions.stream().anyMatch(VersionResolutionCollection::hasDirectDependencies);</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">            final boolean isManaged = (rootDependencies.get(entry.getKey()).getManagedBits() &amp; DependencyNode.MANAGED_VERSION) != 0;</span>
+
+<span class="nc bnc" id="L120" title="All 2 branches missed.">            if (isManaged) {</span>
+<span class="nc" id="L121">                mb.warning(actualVersion);</span>
+            }
+<span class="nc bnc" id="L123" title="All 2 branches missed.">            else if (isDirect) {</span>
+<span class="nc" id="L124">                mb.strong(actualVersion);</span>
+            }
+            else {
+<span class="nc" id="L127">                mb.a(actualVersion);</span>
+            }
+
+<span class="nc bnc" id="L130" title="All 2 branches missed.">            final ImmutableSortedSet&lt;VersionResolutionCollection&gt; unselectedVersions = ImmutableSortedSet.copyOf(Sets.filter(resolutions, v -&gt; !v.isMatchFor(actualVersion)));</span>
+
+<span class="nc bnc" id="L132" title="All 2 branches missed.">            if (!unselectedVersions.isEmpty()) {</span>
+<span class="nc" id="L133">                mb.a(&quot; (&quot;);</span>
+
+<span class="nc bnc" id="L135" title="All 2 branches missed.">                for (final Iterator&lt;VersionResolutionCollection&gt; it = unselectedVersions.iterator(); it.hasNext(); ) {</span>
+<span class="nc" id="L136">                    final VersionResolutionCollection resolution = it.next();</span>
+
+<span class="nc" id="L138">                    final String result = resolution.getExpectedVersion().toString();</span>
+
+<span class="nc bnc" id="L140" title="All 2 branches missed.">                    if (resolution.hasConflict()) {</span>
+<span class="nc" id="L141">                        mb.failure(&quot;!&quot; + result + &quot;!&quot;);</span>
+                    }
+<span class="nc bnc" id="L143" title="All 2 branches missed.">                    else if (resolution.isMatchFor(actualVersion)) {</span>
+<span class="nc" id="L144">                        mb.success(result);</span>
+                    }
+<span class="nc bnc" id="L146" title="All 2 branches missed.">                    else if (resolution.hasDirectDependencies()) {</span>
+<span class="nc" id="L147">                        mb.strong(&quot;*&quot; + result + &quot;*&quot;);</span>
+                    }
+                    else {
+<span class="nc" id="L150">                        mb.a(result);</span>
+                    }
+<span class="nc bnc" id="L152" title="All 2 branches missed.">                    if (it.hasNext()) {</span>
+<span class="nc" id="L153">                        mb.a(&quot;, &quot;);</span>
+                    }
+<span class="nc" id="L155">                }</span>
+
+<span class="nc" id="L157">                mb.a(&quot;)&quot;);</span>
+            }
+
+<span class="nc" id="L160">            LOG.info(&quot;%s&quot;, mb);</span>
+<span class="nc" id="L161">        }</span>
+<span class="nc" id="L162">    }</span>
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

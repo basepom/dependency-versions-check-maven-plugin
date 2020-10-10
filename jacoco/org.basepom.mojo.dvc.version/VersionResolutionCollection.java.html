@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VersionResolutionCollection.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dependency-versions-check-maven-plugin</a> &gt; <a href="index.source.html" class="el_package">org.basepom.mojo.dvc.version</a> &gt; <span class="el_source">VersionResolutionCollection.java</span></div><h1>VersionResolutionCollection.java</h1><pre class="source lang-java linenums">/*
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.basepom.mojo.dvc.version;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
+import com.google.common.collect.SetMultimap;
+import org.apache.maven.artifact.versioning.ComparableVersion;
+import org.basepom.mojo.dvc.QualifiedName;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.Objects;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static com.google.common.collect.ImmutableSetMultimap.toImmutableSetMultimap;
+
+public final class VersionResolutionCollection
+        implements Comparable&lt;VersionResolutionCollection&gt;
+{
+    private final ImmutableSortedSet&lt;VersionResolutionElement&gt; requestingDependencies;
+    private final ComparableVersion expectedVersion;
+
+    private VersionResolutionCollection(Map.Entry&lt;ComparableVersion, Collection&lt;VersionResolutionElement&gt;&gt; entry)
+<span class="nc" id="L39">    {</span>
+<span class="nc" id="L40">        checkNotNull(entry, &quot;entry is null&quot;);</span>
+<span class="nc" id="L41">        this.expectedVersion = entry.getKey();</span>
+<span class="nc" id="L42">        this.requestingDependencies = ImmutableSortedSet.copyOf(entry.getValue());</span>
+<span class="nc" id="L43">    }</span>
+
+    public ImmutableSortedSet&lt;VersionResolutionElement&gt; getRequestingDependencies()
+    {
+<span class="nc" id="L47">        return requestingDependencies;</span>
+    }
+
+    public ComparableVersion getExpectedVersion()
+    {
+<span class="nc" id="L52">        return expectedVersion;</span>
+    }
+
+    /**
+     * True if the selected version exactly matches the expected version.
+     */
+    public boolean isMatchFor(ComparableVersion version)
+    {
+<span class="nc" id="L60">        checkNotNull(version, &quot;version is null&quot;);</span>
+<span class="nc" id="L61">        return expectedVersion.getCanonical().equals(version.getCanonical());</span>
+    }
+
+    @Override
+    public int compareTo(final VersionResolutionCollection other)
+    {
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        if (other == null) {</span>
+<span class="nc" id="L68">            return 1;</span>
+        }
+<span class="nc bnc" id="L70" title="All 4 branches missed.">        else if (other == this || equals(other)) {</span>
+<span class="nc" id="L71">            return 0;</span>
+        }
+        else {
+            // order by expected version
+<span class="nc" id="L75">            return this.getExpectedVersion().compareTo(other.getExpectedVersion());</span>
+        }
+    }
+
+    public boolean hasConflict()
+    {
+<span class="nc" id="L81">        return requestingDependencies.stream().anyMatch(VersionResolutionElement::hasConflict);</span>
+    }
+
+    public boolean hasDirectDependencies()
+    {
+<span class="nc" id="L86">        return requestingDependencies.stream().anyMatch(VersionResolutionElement::isDirectDependency);</span>
+    }
+
+    public boolean hasManagedDependencies()
+    {
+<span class="nc" id="L91">        return requestingDependencies.stream().anyMatch(VersionResolutionElement::isManagedDependency);</span>
+    }
+
+    public static ImmutableSetMultimap&lt;QualifiedName, VersionResolutionCollection&gt; toResolutionMap(final SetMultimap&lt;QualifiedName, VersionResolution&gt; map)
+    {
+<span class="nc" id="L96">        final ImmutableSetMultimap.Builder&lt;QualifiedName, VersionResolutionCollection&gt; builder = ImmutableSetMultimap.builder();</span>
+<span class="nc" id="L97">        builder.orderKeysBy(QualifiedName::compareTo).orderValuesBy(VersionResolutionCollection::compareTo);</span>
+
+<span class="nc" id="L99">        Maps.transformValues(map.asMap(), v -&gt; {</span>
+            // fold into Map from version -&gt; set of all dependencies that want this version.
+<span class="nc" id="L101">            final ImmutableSetMultimap&lt;ComparableVersion, VersionResolutionElement&gt; versionMap = v.stream()</span>
+<span class="nc" id="L102">                    .collect(toImmutableSetMultimap(VersionResolution::getExpectedVersion, VersionResolution::getRequestingDependency));</span>
+            // collect result into a set of VersionResolutionCollection objects.
+<span class="nc" id="L104">            return versionMap.asMap().entrySet().stream()</span>
+<span class="nc" id="L105">                    .map(VersionResolutionCollection::new)</span>
+<span class="nc" id="L106">                    .collect(toImmutableSet());</span>
+            // stream the entries of QualifiedName, Set of version resolution collections
+            // collect them into a Multimap from QualifiedName to version resolution collections.
+<span class="nc" id="L109">        }).forEach(builder::putAll);</span>
+
+<span class="nc" id="L111">        return builder.build();</span>
+    }
+
+    @Override
+    public String toString()
+    {
+<span class="nc" id="L117">        return MoreObjects.toStringHelper(this)</span>
+<span class="nc" id="L118">                .add(&quot;requestingDependencies&quot;, requestingDependencies)</span>
+<span class="nc" id="L119">                .add(&quot;expectedVersion&quot;, expectedVersion)</span>
+<span class="nc" id="L120">                .toString();</span>
+    }
+
+    @Override
+    public boolean equals(final Object o)
+    {
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        if (this == o) {</span>
+<span class="nc" id="L127">            return true;</span>
+        }
+<span class="nc bnc" id="L129" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L130">            return false;</span>
+        }
+<span class="nc" id="L132">        final VersionResolutionCollection that = (VersionResolutionCollection) o;</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        return requestingDependencies.equals(that.requestingDependencies) &amp;&amp;</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">                expectedVersion.equals(that.expectedVersion);</span>
+    }
+
+    @Override
+    public int hashCode()
+    {
+<span class="nc" id="L140">        return Objects.hash(requestingDependencies, expectedVersion);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
