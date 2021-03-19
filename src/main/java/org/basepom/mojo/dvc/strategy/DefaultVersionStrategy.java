@@ -19,7 +19,7 @@ import org.codehaus.plexus.component.annotations.Component;
 /**
  * This is the default versioning strategy used by previous versions of the plugin.
  * It assumes that all smaller versions are compatible when replaced with larger numbers and compares version
- * elements from left to right. E.g. 3.2.1 > 3.2 and 2.1.1 > 1.0. Usually works pretty ok.
+ * elements from left to right. E.g. 3.2.1 &gt; 3.2 and 2.1.1 &gt; 1.0. Usually works pretty ok.
  */
 @Component(role = Strategy.class, hint = "default")
 public class DefaultVersionStrategy

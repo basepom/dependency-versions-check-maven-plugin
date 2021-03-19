@@ -21,12 +21,14 @@ import org.apache.maven.artifact.versioning.ComparableVersion;
 public interface Strategy
 {
     /**
-     * Returns the name of the strategy.
+     * @return The name of the strategy.
      */
     String getName();
 
     /**
-     * Returns true if an artifact with Version b can be replaced by an artifact with Version a.
+     * @param expectedVersion The artifact version expected (artifact version b).
+     * @param resolvedVersion The proposed artifact version (artifact version a).
+     * @return True if an artifact with Version b can be replaced by an artifact with Version a.
      */
     boolean isCompatible(ComparableVersion expectedVersion, ComparableVersion resolvedVersion);
 }

@@ -233,6 +233,11 @@ public abstract class AbstractDependencyVersionsMojo
 
     /**
      * Subclasses need to implement this method.
+     *
+     * @param resolutionMap The prebuilt resolution map from qualified names to version resolution collections.
+     * @param rootDependencyMap The prebuilt dependency map for all the root dependencies.
+     *
+     * @throws Exception When an execution error occurs.
      */
     protected abstract void doExecute(ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> resolutionMap, DependencyMap rootDependencyMap)
             throws Exception;
@@ -240,6 +245,8 @@ public abstract class AbstractDependencyVersionsMojo
     /**
      * Defines the scope used to resolve the project dependencies. The project dependencies will be limited to the dependencies that match this
      * filter. The list mojo overrides this to limit the scope in which dependencies are listed. By default, include everything.
+     *
+     * @return The {@link ScopeLimitingFilter} instance for the project dependencies.
      */
     protected ScopeLimitingFilter createScopeFilter()
     {

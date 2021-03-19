@@ -53,7 +53,10 @@ public final class VersionResolutionCollection
     }
 
     /**
-     * True if the selected version exactly matches the expected version.
+     * Matches a given version to the collection.
+     *
+     * @param version The version to match to this collection.
+     * @return True if the selected version exactly matches the expected version.
      */
     public boolean isMatchFor(ComparableVersion version)
     {

@@ -28,68 +28,69 @@ import java.util.List;
 public interface Context
 {
     /**
-     * fail if any system artifacts can not be resolved.
+     * @return True if any unresolved system artifacts should fail the build.
      */
     boolean isUnresolvedSystemArtifactsFailBuild();
 
     /**
-     * True if the resolver should use multiple threads.
+     * @return True if the resolver should use multiple threads.
      */
     boolean useFastResolution();
 
     /**
-     * Run deep scan instead of regular scan.
+     * @return True if a deep scan should be performed instead of regular scan.
      */
     boolean useDeepScan();
 
     /**
-     * Get all configured exclusions.
+     * @return All configured exclusions.
      */
     List<VersionCheckExcludes> getExclusions();
 
     /**
-     * Lookup cache for the Strategy resolution
+     * @return The lookup cache for the Strategy resolution
      */
     StrategyCache getStrategyCache();
 
     /**
-     * Return the Maven project builder.
+     * @return The Maven project builder.
      */
     ProjectBuilder getProjectBuilder();
 
     /**
-     * Return the Maven project dependency resolver.
+     * @return The Maven project dependency resolver.
      */
     ProjectDependenciesResolver getProjectDependenciesResolver();
 
     /**
-     * Returns the root project.
+     * @return The root project.
      */
     MavenProject getRootProject();
 
     /**
-     * Return all projects that are in the current reactor.
+     * @return All projects that are in the current reactor.
      */
     List<MavenProject> getReactorProjects();
 
     /**
-     * Repository session
+     * @return The repository session
      */
     RepositorySystemSession getRepositorySystemSession();
 
     /**
-     * Repository system for dependency resolution.
+     * @return The repository system for dependency resolution.
      */
     RepositorySystem getRepositorySystem();
 
     /**
-     * Create a new project building request.
+     * @return A new project building request.
      */
     ProjectBuildingRequest createProjectBuildingRequest();
 
     /**
-     * Create a version range resolution request.
+     * @param artifact The artifact to define the version range resolution request.
+     *
+     * @return A version range resolution request.
      */
     VersionRangeRequest createVersionRangeRequest(Artifact artifact);
-
 }

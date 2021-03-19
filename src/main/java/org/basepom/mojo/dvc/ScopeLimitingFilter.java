@@ -44,7 +44,8 @@ public final class ScopeLimitingFilter
     private final ImmutableSet<Scope> scopes;
 
     /**
-     * Returns filter that matches any dependency that would be visible in the given scope.
+     * @param scope A maven scope name.
+     * @return A filter that matches any dependency that would be visible in the given scope.
      */
     public static ScopeLimitingFilter computeDependencyScope(final String scope)
     {
@@ -54,6 +55,9 @@ public final class ScopeLimitingFilter
     /**
      * Returns filter that matches any transitive dependency that would be visible in the given scope. This is different from the scope above,
      * as not all scopes are fully transitive (e.g. a test dependency is not transitively visible.
+     *
+     * @param scope A maven scope name.
+     * @return A filter that matches any dependency that would be visible in the given scope.
      */
     public static ScopeLimitingFilter computeTransitiveScope(final String scope)
     {

@@ -28,7 +28,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Implements Apache versioning strategy for two or three digits. It expects versions formatted as x.y, x.y.z. Versions
  * can have an additional qualifier.
  * <p>
- * Version A (xa.ya.za) can replace Version B (xb.yb.zb) if xa == xb and xa >= xb. component z is always compatible.
+ * Version A (xa.ya.za) can replace Version B (xb.yb.zb) if xa == xb and xa &gt;= xb. component z is always compatible.
  * <p>
  * If an additional qualifier exists, the qualifiers must match.
  */

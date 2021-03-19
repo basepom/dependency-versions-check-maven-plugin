@@ -60,6 +60,13 @@ public final class DependencyMapBuilder
 
     /**
      * Create a map of dependencies for a given dependency node (representing an element on the dependency tree).
+     *
+     * @param dependencyNode The dependency node to use.
+     * @param projectScopeFilter A scope limiting filter to mask out dependencies out of scope.
+     * @return A map of dependencies for this given dependency node.
+     *
+     * @throws MojoExecutionException Dependency resolution failed.
+     * @throws ProjectBuildingException Maven project could not be built.
      */
     public DependencyMap mapDependency(final DependencyNode dependencyNode,
             final DependencyFilter projectScopeFilter)
@@ -78,6 +85,13 @@ public final class DependencyMapBuilder
 
     /**
      * Create a map of names to dependencies for a given project.
+     *
+     * @param project The current maven project.
+     * @param scopeFilter A scope limiting filter to mask out dependencies out of scope.
+     *
+     * @return A map of dependencies for this given dependency node.
+     *
+     * @throws MojoExecutionException Dependency resolution failed.
      */
     public DependencyMap mapProject(final MavenProject project,
             final DependencyFilter scopeFilter)

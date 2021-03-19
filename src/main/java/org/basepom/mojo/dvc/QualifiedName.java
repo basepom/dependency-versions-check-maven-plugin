@@ -104,7 +104,7 @@ public final class QualifiedName
     }
 
     /**
-     * True if this qualified name refers to a test artifact.
+     * @return True if this qualified name refers to a test artifact.
      */
     public boolean hasTests()
     {
@@ -113,7 +113,7 @@ public final class QualifiedName
     }
 
     /**
-     * Returns full name (group, artifact, type, classifier). Normalizes any test jar to be group:artifact:jar:tests.
+     * @return The full name (group, artifact, type, classifier). Normalizes any test jar to be group:artifact:jar:tests.
      */
     public String getFullName()
     {
@@ -126,7 +126,7 @@ public final class QualifiedName
     }
 
     /**
-     * Returns short name (group, artifact, optional classifier). Skips absent classifiers. Normalizes test jars to `tests` classifier.
+     * @return The short name (group, artifact, optional classifier). Skips absent classifiers. Normalizes test jars to `tests` classifier.
      */
     public String getShortName()
     {

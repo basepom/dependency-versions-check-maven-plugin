@@ -89,6 +89,13 @@ public final class DependencyTreeResolver
      * requesting the version.
      * <p>
      * If the special scope "null" is used, a superset of all scopes is used (this is used by the check mojo).
+     *
+     * @param project The maven project to resolve all dependencies for.
+     * @param scopeFilter Limits the scopes to resolve.
+     * @return Map from qualified names to possible version resolutions.
+     * @throws MojoExecutionException Parallel dependency resolution failed.
+     * @throws AbstractArtifactResolutionException Artifact version could not be resolved.
+     * @throws VersionRangeResolutionException Could not compute a version range resolution.
      */
     public ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> computeResolutionMap(final MavenProject project, final ScopeLimitingFilter scopeFilter)
             throws MojoExecutionException, AbstractArtifactResolutionException, VersionRangeResolutionException
