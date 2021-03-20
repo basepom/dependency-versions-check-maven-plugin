@@ -69,6 +69,7 @@
             <name>Henning Schmiedehausen</name>
         </developer>
     </developers>
+
     <issueManagement>
         <system>Github</system>
         <url>https://github.com/basepom/dependency-versions-check-maven-plugin/issues</url>
@@ -229,6 +230,7 @@
                     </rules>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
@@ -260,6 +262,17 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <configuration>
+                    <excludeRoots combine.children="append">
+                        <excludeRoot>target/generated-sources/plugin</excludeRoot>
+                    </excludeRoots>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.basepom.maven</groupId>
                 <artifactId>duplicate-finder-maven-plugin</artifactId>
@@ -269,7 +282,7 @@
                             different parts of maven use different things to resolve dependencies.
                             Classworlds somehow sorts that out, but the duplicate finder does not know that.
                             So exclude this conflict.
-                         -->
+                        -->
                         <exception>
                             <conflictingDependencies>
                                 <dependency>
