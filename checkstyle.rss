@@ -23,9 +23,9 @@ under the License.
     <link>https://basepom.github.io/dependency-versions-check-maven-plugin/</link>
     <description>dependency-versions-check-maven-plugin - Checkstyle report</description>
     <language>en-us</language>
-    <copyright>&#169;2020 The basepom project</copyright>
+    <copyright>&#169;2020 - 2021 The basepom project</copyright>
     <item>
-      <title>File: 1,
+      <title>File: 0,
              Errors: 0,
              Warnings: 0,
              Infos: 0
@@ -44,20 +44,6 @@ under the License.
             </tr>
           </thead>
           <tbody>
-                          <tr>
-                <td>
-                  <a href="https://basepom.github.io/dependency-versions-check-maven-plugin//checkstyle.html#org.basepom.mojo.dvc.mojo.HelpMojo.java">org/basepom/mojo/dvc/mojo/HelpMojo.java</a>
-                </td>
-                <td>
-                  0
-                </td>
-                <td>
-                  0
-                </td>
-                <td>
-                  0
-                </td>
-              </tr>
                       </tbody>
         </table>
         

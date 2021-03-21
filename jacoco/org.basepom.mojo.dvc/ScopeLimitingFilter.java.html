@@ -44,97 +44,101 @@ public final class ScopeLimitingFilter
     private final ImmutableSet&lt;Scope&gt; scopes;
 
     /**
-     * Returns filter that matches any dependency that would be visible in the given scope.
+     * @param scope A maven scope name.
+     * @return A filter that matches any dependency that would be visible in the given scope.
      */
     public static ScopeLimitingFilter computeDependencyScope(final String scope)
     {
-<span class="nc" id="L51">        return new ScopeLimitingFilter(computeScopes(scope));</span>
+<span class="nc" id="L52">        return new ScopeLimitingFilter(computeScopes(scope));</span>
     }
 
     /**
      * Returns filter that matches any transitive dependency that would be visible in the given scope. This is different from the scope above,
      * as not all scopes are fully transitive (e.g. a test dependency is not transitively visible.
+     *
+     * @param scope A maven scope name.
+     * @return A filter that matches any dependency that would be visible in the given scope.
      */
     public static ScopeLimitingFilter computeTransitiveScope(final String scope)
     {
-<span class="nc" id="L60">        return new ScopeLimitingFilter(computeScopes(computeTransitiveScopes(scope)));</span>
+<span class="nc" id="L64">        return new ScopeLimitingFilter(computeScopes(computeTransitiveScopes(scope)));</span>
     }
 
     private ScopeLimitingFilter(Set&lt;Scope&gt; scopes)
-<span class="nc" id="L64">    {</span>
-<span class="nc" id="L65">        this.scopes = ImmutableSet.copyOf(scopes);</span>
-<span class="nc" id="L66">    }</span>
+<span class="nc" id="L68">    {</span>
+<span class="nc" id="L69">        this.scopes = ImmutableSet.copyOf(scopes);</span>
+<span class="nc" id="L70">    }</span>
 
     private static EnumSet&lt;Scope&gt; computeScopes(final String scope)
     {
-<span class="nc" id="L70">        checkNotNull(scope, &quot;scope is null&quot;);</span>
+<span class="nc" id="L74">        checkNotNull(scope, &quot;scope is null&quot;);</span>
 
-<span class="nc bnc" id="L72" title="All 6 branches missed.">        switch (scope) {</span>
+<span class="nc bnc" id="L76" title="All 6 branches missed.">        switch (scope) {</span>
             case JavaScopes.COMPILE:
-<span class="nc" id="L74">                return EnumSet.of(compile, system, provided);</span>
+<span class="nc" id="L78">                return EnumSet.of(compile, system, provided);</span>
             case JavaScopes.RUNTIME:
-<span class="nc" id="L76">                return EnumSet.of(compile, runtime);</span>
+<span class="nc" id="L80">                return EnumSet.of(compile, runtime);</span>
             case COMPILE_PLUS_RUNTIME:
-<span class="nc" id="L78">                return EnumSet.of(compile, system, provided, runtime);</span>
+<span class="nc" id="L82">                return EnumSet.of(compile, system, provided, runtime);</span>
             case RUNTIME_PLUS_SYSTEM:
-<span class="nc" id="L80">                return EnumSet.of(compile, system, runtime);</span>
+<span class="nc" id="L84">                return EnumSet.of(compile, system, runtime);</span>
             case JavaScopes.TEST:
-<span class="nc" id="L82">                return EnumSet.allOf(Scope.class);</span>
+<span class="nc" id="L86">                return EnumSet.allOf(Scope.class);</span>
             default:
-<span class="nc" id="L84">                throw new IllegalStateException(&quot;Scope '&quot; + scope + &quot;' is unknown!&quot;);</span>
+<span class="nc" id="L88">                throw new IllegalStateException(&quot;Scope '&quot; + scope + &quot;' is unknown!&quot;);</span>
         }
     }
 
     private static String computeTransitiveScopes(final String scope)
     {
-<span class="nc" id="L90">        checkNotNull(scope, &quot;scope is null&quot;);</span>
+<span class="nc" id="L94">        checkNotNull(scope, &quot;scope is null&quot;);</span>
 
-<span class="nc bnc" id="L92" title="All 4 branches missed.">        switch (scope) {</span>
+<span class="nc bnc" id="L96" title="All 4 branches missed.">        switch (scope) {</span>
             case JavaScopes.COMPILE:
             case JavaScopes.RUNTIME:
             case COMPILE_PLUS_RUNTIME:
             case RUNTIME_PLUS_SYSTEM:
-<span class="nc" id="L97">                return scope;</span>
+<span class="nc" id="L101">                return scope;</span>
             case JavaScopes.TEST:
-<span class="nc" id="L99">                return COMPILE_PLUS_RUNTIME;</span>
+<span class="nc" id="L103">                return COMPILE_PLUS_RUNTIME;</span>
             case JavaScopes.PROVIDED:
-<span class="nc" id="L101">                return COMPILE_PLUS_RUNTIME; // remove test and provided</span>
+<span class="nc" id="L105">                return COMPILE_PLUS_RUNTIME; // remove test and provided</span>
             default:
-<span class="nc" id="L103">                throw new IllegalStateException(&quot;Scope '&quot; + scope + &quot;' is unknown!&quot;);</span>
+<span class="nc" id="L107">                throw new IllegalStateException(&quot;Scope '&quot; + scope + &quot;' is unknown!&quot;);</span>
         }
     }
 
     @Override
     public boolean accept(final DependencyNode node, final List&lt;DependencyNode&gt; parents)
     {
-<span class="nc" id="L110">        checkNotNull(node, &quot;node is null&quot;);</span>
+<span class="nc" id="L114">        checkNotNull(node, &quot;node is null&quot;);</span>
 
-<span class="nc bnc" id="L112" title="All 2 branches missed.">        if (node.getDependency() == null) {</span>
-<span class="nc" id="L113">            return true;</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">        if (node.getDependency() == null) {</span>
+<span class="nc" id="L117">            return true;</span>
         }
-<span class="nc" id="L115">        final String scope = node.getDependency().getScope();</span>
-<span class="nc bnc" id="L116" title="All 6 branches missed.">        switch (scope) {</span>
+<span class="nc" id="L119">        final String scope = node.getDependency().getScope();</span>
+<span class="nc bnc" id="L120" title="All 6 branches missed.">        switch (scope) {</span>
             case JavaScopes.COMPILE:
-<span class="nc" id="L118">                return scopes.contains(compile);</span>
+<span class="nc" id="L122">                return scopes.contains(compile);</span>
             case JavaScopes.TEST:
-<span class="nc" id="L120">                return scopes.contains(test);</span>
+<span class="nc" id="L124">                return scopes.contains(test);</span>
             case JavaScopes.RUNTIME:
-<span class="nc" id="L122">                return scopes.contains(runtime);</span>
+<span class="nc" id="L126">                return scopes.contains(runtime);</span>
             case JavaScopes.PROVIDED:
-<span class="nc" id="L124">                return scopes.contains(provided);</span>
+<span class="nc" id="L128">                return scopes.contains(provided);</span>
             case JavaScopes.SYSTEM:
-<span class="nc" id="L126">                return scopes.contains(system);</span>
+<span class="nc" id="L130">                return scopes.contains(system);</span>
             default:
-<span class="nc" id="L128">                return false;</span>
+<span class="nc" id="L132">                return false;</span>
         }
     }
 
     @Override
     public String toString()
     {
-<span class="nc" id="L135">        return MoreObjects.toStringHelper(this)</span>
-<span class="nc" id="L136">                .add(&quot;scopes&quot;, scopes)</span>
-<span class="nc" id="L137">                .toString();</span>
+<span class="nc" id="L139">        return MoreObjects.toStringHelper(this)</span>
+<span class="nc" id="L140">                .add(&quot;scopes&quot;, scopes)</span>
+<span class="nc" id="L141">                .toString();</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

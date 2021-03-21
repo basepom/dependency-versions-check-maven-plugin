@@ -233,6 +233,11 @@ import static com.google.common.base.Preconditions.checkState;
 
     /**
      * Subclasses need to implement this method.
+     *
+     * @param resolutionMap The prebuilt resolution map from qualified names to version resolution collections.
+     * @param rootDependencyMap The prebuilt dependency map for all the root dependencies.
+     *
+     * @throws Exception When an execution error occurs.
      */
     protected abstract void doExecute(ImmutableSetMultimap&lt;QualifiedName, VersionResolutionCollection&gt; resolutionMap, DependencyMap rootDependencyMap)
             throws Exception;
@@ -240,88 +245,90 @@ import static com.google.common.base.Preconditions.checkState;
     /**
      * Defines the scope used to resolve the project dependencies. The project dependencies will be limited to the dependencies that match this
      * filter. The list mojo overrides this to limit the scope in which dependencies are listed. By default, include everything.
+     *
+     * @return The {@link ScopeLimitingFilter} instance for the project dependencies.
      */
     protected ScopeLimitingFilter createScopeFilter()
     {
-<span class="nc" id="L246">        return ScopeLimitingFilter.computeDependencyScope(scope);</span>
+<span class="nc" id="L253">        return ScopeLimitingFilter.computeDependencyScope(scope);</span>
     }
 
     @Override
     public boolean useFastResolution()
     {
-<span class="nc" id="L252">        return fastResolution;</span>
+<span class="nc" id="L259">        return fastResolution;</span>
     }
 
     @Override
     public boolean useDeepScan()
     {
-<span class="nc" id="L258">        return deepScan;</span>
+<span class="nc" id="L265">        return deepScan;</span>
     }
 
     @Override
     public StrategyCache getStrategyCache()
     {
-<span class="nc" id="L264">        return strategyCache;</span>
+<span class="nc" id="L271">        return strategyCache;</span>
     }
 
     @Override
     public ProjectBuilder getProjectBuilder()
     {
-<span class="nc" id="L270">        return mavenProjectBuilder;</span>
+<span class="nc" id="L277">        return mavenProjectBuilder;</span>
     }
 
     @Override
     public ProjectDependenciesResolver getProjectDependenciesResolver()
     {
-<span class="nc" id="L276">        return projectDependenciesResolver;</span>
+<span class="nc" id="L283">        return projectDependenciesResolver;</span>
     }
 
     @Override
     public MavenProject getRootProject()
     {
-<span class="nc" id="L282">        return project;</span>
+<span class="nc" id="L289">        return project;</span>
     }
 
     @Override
     public List&lt;MavenProject&gt; getReactorProjects()
     {
-<span class="nc" id="L288">        return ImmutableList.copyOf(reactorProjects);</span>
+<span class="nc" id="L295">        return ImmutableList.copyOf(reactorProjects);</span>
     }
 
     @Override
     public RepositorySystemSession getRepositorySystemSession()
     {
-<span class="nc" id="L294">        return mavenSession.getRepositorySession();</span>
+<span class="nc" id="L301">        return mavenSession.getRepositorySession();</span>
     }
 
     @Override
-<span class="nc" id="L298">    public RepositorySystem getRepositorySystem() { return repositorySystem; }</span>
+<span class="nc" id="L305">    public RepositorySystem getRepositorySystem() { return repositorySystem; }</span>
 
     @Override
     public ProjectBuildingRequest createProjectBuildingRequest()
     {
-<span class="nc" id="L303">        DefaultProjectBuildingRequest buildingRequest = new DefaultProjectBuildingRequest(mavenSession.getProjectBuildingRequest());</span>
-<span class="nc" id="L304">        buildingRequest.setRemoteRepositories(project.getRemoteArtifactRepositories());</span>
-<span class="nc" id="L305">        return buildingRequest;</span>
+<span class="nc" id="L310">        DefaultProjectBuildingRequest buildingRequest = new DefaultProjectBuildingRequest(mavenSession.getProjectBuildingRequest());</span>
+<span class="nc" id="L311">        buildingRequest.setRemoteRepositories(project.getRemoteArtifactRepositories());</span>
+<span class="nc" id="L312">        return buildingRequest;</span>
     }
 
     @Override
     public VersionRangeRequest createVersionRangeRequest(Artifact artifact)
     {
-<span class="nc" id="L311">        checkNotNull(artifact, &quot;artifact is null&quot;);</span>
-<span class="nc" id="L312">        return new VersionRangeRequest(artifact, project.getRemoteProjectRepositories(), &quot;&quot;);</span>
+<span class="nc" id="L318">        checkNotNull(artifact, &quot;artifact is null&quot;);</span>
+<span class="nc" id="L319">        return new VersionRangeRequest(artifact, project.getRemoteProjectRepositories(), &quot;&quot;);</span>
     }
 
     @Override
     public List&lt;VersionCheckExcludes&gt; getExclusions()
     {
-<span class="nc" id="L318">        return Arrays.asList(exclusions);</span>
+<span class="nc" id="L325">        return Arrays.asList(exclusions);</span>
     }
 
     @Override
     public boolean isUnresolvedSystemArtifactsFailBuild()
     {
-<span class="nc" id="L324">        return unresolvedSystemArtifactsFailBuild;</span>
+<span class="nc" id="L331">        return unresolvedSystemArtifactsFailBuild;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

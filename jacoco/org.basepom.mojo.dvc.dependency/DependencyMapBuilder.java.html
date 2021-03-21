@@ -60,145 +60,159 @@ public final class DependencyMapBuilder
 
     /**
      * Create a map of dependencies for a given dependency node (representing an element on the dependency tree).
+     *
+     * @param dependencyNode The dependency node to use.
+     * @param projectScopeFilter A scope limiting filter to mask out dependencies out of scope.
+     * @return A map of dependencies for this given dependency node.
+     *
+     * @throws MojoExecutionException Dependency resolution failed.
+     * @throws ProjectBuildingException Maven project could not be built.
      */
     public DependencyMap mapDependency(final DependencyNode dependencyNode,
             final DependencyFilter projectScopeFilter)
             throws MojoExecutionException, ProjectBuildingException
     {
-<span class="nc" id="L68">        checkNotNull(dependencyNode, &quot;dependencyNode is null&quot;);</span>
-<span class="nc" id="L69">        checkNotNull(projectScopeFilter, &quot;projectScopeFilter is null&quot;);</span>
+<span class="nc" id="L75">        checkNotNull(dependencyNode, &quot;dependencyNode is null&quot;);</span>
+<span class="nc" id="L76">        checkNotNull(projectScopeFilter, &quot;projectScopeFilter is null&quot;);</span>
 
         // build the project
-<span class="nc" id="L72">        final ProjectBuildingResult result = context.getProjectBuilder().build(convertFromAetherDependency(dependencyNode), false, context.createProjectBuildingRequest());</span>
+<span class="nc" id="L79">        final ProjectBuildingResult result = context.getProjectBuilder().build(convertFromAetherDependency(dependencyNode), false, context.createProjectBuildingRequest());</span>
 
         // now resolve the project representing the dependency.
-<span class="nc" id="L75">        final MavenProject project = result.getProject();</span>
-<span class="nc" id="L76">        return mapProject(project, projectScopeFilter);</span>
+<span class="nc" id="L82">        final MavenProject project = result.getProject();</span>
+<span class="nc" id="L83">        return mapProject(project, projectScopeFilter);</span>
     }
 
     /**
      * Create a map of names to dependencies for a given project.
+     *
+     * @param project The current maven project.
+     * @param scopeFilter A scope limiting filter to mask out dependencies out of scope.
+     *
+     * @return A map of dependencies for this given dependency node.
+     *
+     * @throws MojoExecutionException Dependency resolution failed.
      */
     public DependencyMap mapProject(final MavenProject project,
             final DependencyFilter scopeFilter)
             throws MojoExecutionException
     {
-<span class="nc" id="L86">        checkNotNull(project, &quot;project is null&quot;);</span>
-<span class="nc" id="L87">        checkNotNull(scopeFilter, &quot;scopeFilter is null&quot;);</span>
+<span class="nc" id="L100">        checkNotNull(project, &quot;project is null&quot;);</span>
+<span class="nc" id="L101">        checkNotNull(scopeFilter, &quot;scopeFilter is null&quot;);</span>
 
-<span class="nc" id="L89">        final DependencyResolutionRequest request = new DefaultDependencyResolutionRequest();</span>
-<span class="nc" id="L90">        request.setRepositorySession(context.createProjectBuildingRequest().getRepositorySession());</span>
-<span class="nc" id="L91">        request.setMavenProject(project);</span>
-<span class="nc" id="L92">        request.setResolutionFilter(scopeFilter);</span>
+<span class="nc" id="L103">        final DependencyResolutionRequest request = new DefaultDependencyResolutionRequest();</span>
+<span class="nc" id="L104">        request.setRepositorySession(context.createProjectBuildingRequest().getRepositorySession());</span>
+<span class="nc" id="L105">        request.setMavenProject(project);</span>
+<span class="nc" id="L106">        request.setResolutionFilter(scopeFilter);</span>
 
         DependencyResolutionResult result;
 
         try {
-<span class="nc" id="L97">            result = context.getProjectDependenciesResolver().resolve(request);</span>
+<span class="nc" id="L111">            result = context.getProjectDependenciesResolver().resolve(request);</span>
         }
-<span class="nc" id="L99">        catch (DependencyResolutionException e) {</span>
-<span class="nc" id="L100">            result = e.getResult();</span>
+<span class="nc" id="L113">        catch (DependencyResolutionException e) {</span>
+<span class="nc" id="L114">            result = e.getResult();</span>
             // try to resolve using the reactor projects
-<span class="nc" id="L102">            final ImmutableSet&lt;ProjectKey&gt; reactorProjects = context.getReactorProjects().stream()</span>
-<span class="nc" id="L103">                    .map(ProjectKey::fromProject).collect(toImmutableSet());</span>
+<span class="nc" id="L116">            final ImmutableSet&lt;ProjectKey&gt; reactorProjects = context.getReactorProjects().stream()</span>
+<span class="nc" id="L117">                    .map(ProjectKey::fromProject).collect(toImmutableSet());</span>
 
             // resolve all dependencies that are matched by the reactor.
-<span class="nc" id="L106">            final ImmutableSet&lt;Dependency&gt; reactorDependencies = result.getUnresolvedDependencies().stream()</span>
-<span class="nc" id="L107">                    .filter(d -&gt; reactorProjects.contains(ProjectKey.fromDependency(d)))</span>
-<span class="nc" id="L108">                    .collect(toImmutableSet());</span>
+<span class="nc" id="L120">            final ImmutableSet&lt;Dependency&gt; reactorDependencies = result.getUnresolvedDependencies().stream()</span>
+<span class="nc" id="L121">                    .filter(d -&gt; reactorProjects.contains(ProjectKey.fromDependency(d)))</span>
+<span class="nc" id="L122">                    .collect(toImmutableSet());</span>
 
-<span class="nc" id="L110">            result.getUnresolvedDependencies().removeAll(reactorDependencies);</span>
-<span class="nc" id="L111">            result.getResolvedDependencies().addAll(reactorDependencies);</span>
+<span class="nc" id="L124">            result.getUnresolvedDependencies().removeAll(reactorDependencies);</span>
+<span class="nc" id="L125">            result.getResolvedDependencies().addAll(reactorDependencies);</span>
 
-<span class="nc bnc" id="L113" title="All 2 branches missed.">            if (!context.isUnresolvedSystemArtifactsFailBuild()) {</span>
-<span class="nc" id="L114">                final ImmutableSet&lt;Dependency&gt; systemDependencies = result.getUnresolvedDependencies().stream()</span>
-<span class="nc" id="L115">                        .filter(d -&gt; JavaScopes.SYSTEM.equals(d.getScope()))</span>
-<span class="nc" id="L116">                        .collect(toImmutableSet());</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">            if (!context.isUnresolvedSystemArtifactsFailBuild()) {</span>
+<span class="nc" id="L128">                final ImmutableSet&lt;Dependency&gt; systemDependencies = result.getUnresolvedDependencies().stream()</span>
+<span class="nc" id="L129">                        .filter(d -&gt; JavaScopes.SYSTEM.equals(d.getScope()))</span>
+<span class="nc" id="L130">                        .collect(toImmutableSet());</span>
 
-<span class="nc" id="L118">                result.getUnresolvedDependencies().removeAll(systemDependencies);</span>
-<span class="nc" id="L119">                result.getResolvedDependencies().addAll(systemDependencies);</span>
+<span class="nc" id="L132">                result.getUnresolvedDependencies().removeAll(systemDependencies);</span>
+<span class="nc" id="L133">                result.getResolvedDependencies().addAll(systemDependencies);</span>
             }
 
-<span class="nc bnc" id="L122" title="All 2 branches missed.">            if (!result.getUnresolvedDependencies().isEmpty()) {</span>
-<span class="nc" id="L123">                final Throwable t = Throwables.getRootCause(e);</span>
-<span class="nc" id="L124">                RemoteRepository repository = null;</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">            if (!result.getUnresolvedDependencies().isEmpty()) {</span>
+<span class="nc" id="L137">                final Throwable t = Throwables.getRootCause(e);</span>
+<span class="nc" id="L138">                RemoteRepository repository = null;</span>
 
-<span class="nc bnc" id="L126" title="All 2 branches missed.">                if (t instanceof NoRepositoryLayoutException) {</span>
-<span class="nc" id="L127">                    repository = ((NoRepositoryLayoutException) t).getRepository();</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">                if (t instanceof NoRepositoryLayoutException) {</span>
+<span class="nc" id="L141">                    repository = ((NoRepositoryLayoutException) t).getRepository();</span>
                 }
-<span class="nc bnc" id="L129" title="All 2 branches missed.">                else if (t instanceof ArtifactTransferException) {</span>
-<span class="nc" id="L130">                    repository = ((ArtifactTransferException) t).getRepository();</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">                else if (t instanceof ArtifactTransferException) {</span>
+<span class="nc" id="L144">                    repository = ((ArtifactTransferException) t).getRepository();</span>
                 }
 
-<span class="nc bnc" id="L133" title="All 4 branches missed.">                if (repository != null &amp;&amp; &quot;legacy&quot;.equals(repository.getContentType())) {</span>
-<span class="nc" id="L134">                    LOG.warn(&quot;Could not access a legacy repository for artifacts:  %s; Reason: %s&quot;, result.getUnresolvedDependencies(), t.getMessage());</span>
+<span class="nc bnc" id="L147" title="All 4 branches missed.">                if (repository != null &amp;&amp; &quot;legacy&quot;.equals(repository.getContentType())) {</span>
+<span class="nc" id="L148">                    LOG.warn(&quot;Could not access a legacy repository for artifacts:  %s; Reason: %s&quot;, result.getUnresolvedDependencies(), t.getMessage());</span>
                 }
                 else {
-<span class="nc" id="L137">                    throw new MojoExecutionException(&quot;Could not resolve the following dependencies: &quot; + result.getUnresolvedDependencies(), e);</span>
+<span class="nc" id="L151">                    throw new MojoExecutionException(&quot;Could not resolve the following dependencies: &quot; + result.getUnresolvedDependencies(), e);</span>
                 }
             }
-<span class="nc" id="L140">        }</span>
+<span class="nc" id="L154">        }</span>
 
-<span class="nc" id="L142">        final DependencyNode graph = result.getDependencyGraph();</span>
-<span class="nc" id="L143">        final ImmutableMap.Builder&lt;QualifiedName, DependencyNode&gt; dependencyCollector = ImmutableMap.builder();</span>
-<span class="nc" id="L144">        final ImmutableMap&lt;QualifiedName, DependencyNode&gt; directDependencies = loadDependencyTree(graph, scopeFilter, dependencyCollector);</span>
-<span class="nc" id="L145">        dependencyCollector.putAll(directDependencies);</span>
-<span class="nc" id="L146">        return new DependencyMap(dependencyCollector.build(), directDependencies);</span>
+<span class="nc" id="L156">        final DependencyNode graph = result.getDependencyGraph();</span>
+<span class="nc" id="L157">        final ImmutableMap.Builder&lt;QualifiedName, DependencyNode&gt; dependencyCollector = ImmutableMap.builder();</span>
+<span class="nc" id="L158">        final ImmutableMap&lt;QualifiedName, DependencyNode&gt; directDependencies = loadDependencyTree(graph, scopeFilter, dependencyCollector);</span>
+<span class="nc" id="L159">        dependencyCollector.putAll(directDependencies);</span>
+<span class="nc" id="L160">        return new DependencyMap(dependencyCollector.build(), directDependencies);</span>
     }
 
     private ImmutableMap&lt;QualifiedName, DependencyNode&gt; loadDependencyTree(final DependencyNode node,
             final DependencyFilter filter,
             final ImmutableMap.Builder&lt;QualifiedName, DependencyNode&gt; allDependencyCollector)
     {
-<span class="nc" id="L153">        final ImmutableMap.Builder&lt;QualifiedName, DependencyNode&gt; builder = ImmutableMap.builder();</span>
-<span class="nc bnc" id="L154" title="All 2 branches missed.">        for (final DependencyNode dependencyNode : node.getChildren()) {</span>
-<span class="nc bnc" id="L155" title="All 2 branches missed.">            if (dependencyNode.getManagedBits() != 0) {</span>
-<span class="nc bnc" id="L156" title="All 2 branches missed.">                if ((dependencyNode.getManagedBits() &amp; DependencyNode.MANAGED_VERSION) != 0) {</span>
-<span class="nc" id="L157">                    LOG.debug(&quot;%s -&gt; Managed Version!&quot;, dependencyNode.getArtifact());</span>
+<span class="nc" id="L167">        final ImmutableMap.Builder&lt;QualifiedName, DependencyNode&gt; builder = ImmutableMap.builder();</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">        for (final DependencyNode dependencyNode : node.getChildren()) {</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">            if (dependencyNode.getManagedBits() != 0) {</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">                if ((dependencyNode.getManagedBits() &amp; DependencyNode.MANAGED_VERSION) != 0) {</span>
+<span class="nc" id="L171">                    LOG.debug(&quot;%s -&gt; Managed Version!&quot;, dependencyNode.getArtifact());</span>
                 }
-<span class="nc bnc" id="L159" title="All 2 branches missed.">                if ((dependencyNode.getManagedBits() &amp; DependencyNode.MANAGED_SCOPE) != 0) {</span>
-<span class="nc" id="L160">                    LOG.debug(&quot;%s -&gt; Managed Scope!&quot;, dependencyNode.getArtifact());</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">                if ((dependencyNode.getManagedBits() &amp; DependencyNode.MANAGED_SCOPE) != 0) {</span>
+<span class="nc" id="L174">                    LOG.debug(&quot;%s -&gt; Managed Scope!&quot;, dependencyNode.getArtifact());</span>
                 }
-<span class="nc bnc" id="L162" title="All 2 branches missed.">                if ((dependencyNode.getManagedBits() &amp; DependencyNode.MANAGED_OPTIONAL) != 0) {</span>
-<span class="nc" id="L163">                    LOG.debug(&quot;%s -&gt; Managed Optional!&quot;, dependencyNode.getArtifact());</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">                if ((dependencyNode.getManagedBits() &amp; DependencyNode.MANAGED_OPTIONAL) != 0) {</span>
+<span class="nc" id="L177">                    LOG.debug(&quot;%s -&gt; Managed Optional!&quot;, dependencyNode.getArtifact());</span>
                 }
-<span class="nc bnc" id="L165" title="All 2 branches missed.">                if ((dependencyNode.getManagedBits() &amp; DependencyNode.MANAGED_PROPERTIES) != 0) {</span>
-<span class="nc" id="L166">                    LOG.debug(&quot;%s -&gt; Managed Properties!&quot;, dependencyNode.getArtifact());</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">                if ((dependencyNode.getManagedBits() &amp; DependencyNode.MANAGED_PROPERTIES) != 0) {</span>
+<span class="nc" id="L180">                    LOG.debug(&quot;%s -&gt; Managed Properties!&quot;, dependencyNode.getArtifact());</span>
                 }
-<span class="nc bnc" id="L168" title="All 2 branches missed.">                if ((dependencyNode.getManagedBits() &amp; DependencyNode.MANAGED_EXCLUSIONS) != 0) {</span>
-<span class="nc" id="L169">                    LOG.debug(&quot;%s -&gt; Managed Exclusions!&quot;, dependencyNode.getArtifact());</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">                if ((dependencyNode.getManagedBits() &amp; DependencyNode.MANAGED_EXCLUSIONS) != 0) {</span>
+<span class="nc" id="L183">                    LOG.debug(&quot;%s -&gt; Managed Exclusions!&quot;, dependencyNode.getArtifact());</span>
                 }
             }
 
-<span class="nc bnc" id="L173" title="All 2 branches missed.">            if (filter.accept(dependencyNode, ImmutableList.of(node))) {</span>
-<span class="nc" id="L174">                final QualifiedName name = QualifiedName.fromDependencyNode(dependencyNode);</span>
-<span class="nc" id="L175">                builder.put(name, dependencyNode);</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">            if (filter.accept(dependencyNode, ImmutableList.of(node))) {</span>
+<span class="nc" id="L188">                final QualifiedName name = QualifiedName.fromDependencyNode(dependencyNode);</span>
+<span class="nc" id="L189">                builder.put(name, dependencyNode);</span>
 
-<span class="nc" id="L177">                allDependencyCollector.putAll(loadDependencyTree(dependencyNode, filter, allDependencyCollector));</span>
+<span class="nc" id="L191">                allDependencyCollector.putAll(loadDependencyTree(dependencyNode, filter, allDependencyCollector));</span>
             }
-<span class="nc" id="L179">        }</span>
-<span class="nc" id="L180">        return builder.build();</span>
+<span class="nc" id="L193">        }</span>
+<span class="nc" id="L194">        return builder.build();</span>
     }
 
     static org.apache.maven.artifact.Artifact convertFromAetherDependency(final DependencyNode dependencyNode)
     {
-<span class="nc" id="L185">        Artifact aetherArtifact = convertToPomArtifact(dependencyNode.getArtifact());</span>
+<span class="nc" id="L199">        Artifact aetherArtifact = convertToPomArtifact(dependencyNode.getArtifact());</span>
 
-<span class="nc" id="L187">        final org.apache.maven.artifact.Artifact mavenArtifact = RepositoryUtils.toArtifact(aetherArtifact);</span>
-<span class="nc" id="L188">        mavenArtifact.setScope(dependencyNode.getDependency().getScope());</span>
-<span class="nc" id="L189">        mavenArtifact.setOptional(dependencyNode.getDependency().isOptional());</span>
+<span class="nc" id="L201">        final org.apache.maven.artifact.Artifact mavenArtifact = RepositoryUtils.toArtifact(aetherArtifact);</span>
+<span class="nc" id="L202">        mavenArtifact.setScope(dependencyNode.getDependency().getScope());</span>
+<span class="nc" id="L203">        mavenArtifact.setOptional(dependencyNode.getDependency().isOptional());</span>
 
-<span class="nc" id="L191">        return mavenArtifact;</span>
+<span class="nc" id="L205">        return mavenArtifact;</span>
     }
 
     static Artifact convertToPomArtifact(final Artifact artifact) {
         // pom artifact has no classifier. If this is already a pom artifact, don't touch it.
-<span class="nc bnc" id="L196" title="All 4 branches missed.">        if (artifact.getClassifier().isEmpty() &amp;&amp; &quot;pom&quot;.equals(artifact.getExtension())) {</span>
-<span class="nc" id="L197">            return artifact;</span>
+<span class="nc bnc" id="L210" title="All 4 branches missed.">        if (artifact.getClassifier().isEmpty() &amp;&amp; &quot;pom&quot;.equals(artifact.getExtension())) {</span>
+<span class="nc" id="L211">            return artifact;</span>
         }
 
         // create a POM artifact.
-<span class="nc" id="L201">        return new DefaultArtifact(artifact.getGroupId(), artifact.getArtifactId(), &quot;pom&quot;, artifact.getVersion());</span>
+<span class="nc" id="L215">        return new DefaultArtifact(artifact.getGroupId(), artifact.getArtifactId(), &quot;pom&quot;, artifact.getVersion());</span>
     }
 
     private static final class ProjectKey
@@ -209,45 +223,45 @@ public final class DependencyMapBuilder
 
         public static ProjectKey fromProject(final MavenProject project)
         {
-<span class="nc" id="L212">            checkNotNull(project, &quot;project; is null&quot;);</span>
-<span class="nc" id="L213">            return new ProjectKey(project.getGroupId(), project.getArtifactId(), project.getVersion());</span>
+<span class="nc" id="L226">            checkNotNull(project, &quot;project; is null&quot;);</span>
+<span class="nc" id="L227">            return new ProjectKey(project.getGroupId(), project.getArtifactId(), project.getVersion());</span>
         }
 
         public static ProjectKey fromDependency(final Dependency dependency)
         {
-<span class="nc" id="L218">            checkNotNull(dependency, &quot;artifact; is null&quot;);</span>
-<span class="nc" id="L219">            return new ProjectKey(dependency.getArtifact().getGroupId(),</span>
-<span class="nc" id="L220">                    dependency.getArtifact().getArtifactId(),</span>
-<span class="nc" id="L221">                    dependency.getArtifact().getVersion());</span>
+<span class="nc" id="L232">            checkNotNull(dependency, &quot;artifact; is null&quot;);</span>
+<span class="nc" id="L233">            return new ProjectKey(dependency.getArtifact().getGroupId(),</span>
+<span class="nc" id="L234">                    dependency.getArtifact().getArtifactId(),</span>
+<span class="nc" id="L235">                    dependency.getArtifact().getVersion());</span>
         }
 
         private ProjectKey(final String groupId, final String artifactId, final String version)
-<span class="nc" id="L225">        {</span>
-<span class="nc" id="L226">            this.groupId = checkNotNull(groupId, &quot;groupId is null&quot;);</span>
-<span class="nc" id="L227">            this.artifactId = checkNotNull(artifactId, &quot;artifactId is null&quot;);</span>
-<span class="nc" id="L228">            this.version = checkNotNull(version, &quot;version is null&quot;);</span>
-<span class="nc" id="L229">        }</span>
+<span class="nc" id="L239">        {</span>
+<span class="nc" id="L240">            this.groupId = checkNotNull(groupId, &quot;groupId is null&quot;);</span>
+<span class="nc" id="L241">            this.artifactId = checkNotNull(artifactId, &quot;artifactId is null&quot;);</span>
+<span class="nc" id="L242">            this.version = checkNotNull(version, &quot;version is null&quot;);</span>
+<span class="nc" id="L243">        }</span>
 
         @Override
         public boolean equals(Object o)
         {
-<span class="nc bnc" id="L234" title="All 2 branches missed.">            if (this == o) {</span>
-<span class="nc" id="L235">                return true;</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">            if (this == o) {</span>
+<span class="nc" id="L249">                return true;</span>
             }
-<span class="nc bnc" id="L237" title="All 4 branches missed.">            if (o == null || getClass() != o.getClass()) {</span>
-<span class="nc" id="L238">                return false;</span>
+<span class="nc bnc" id="L251" title="All 4 branches missed.">            if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L252">                return false;</span>
             }
-<span class="nc" id="L240">            ProjectKey that = (ProjectKey) o;</span>
-<span class="nc bnc" id="L241" title="All 2 branches missed.">            return groupId.equals(that.groupId) &amp;&amp;</span>
-<span class="nc bnc" id="L242" title="All 2 branches missed.">                    artifactId.equals(that.artifactId) &amp;&amp;</span>
-<span class="nc bnc" id="L243" title="All 2 branches missed.">                    version.equals(that.version);</span>
+<span class="nc" id="L254">            ProjectKey that = (ProjectKey) o;</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">            return groupId.equals(that.groupId) &amp;&amp;</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">                    artifactId.equals(that.artifactId) &amp;&amp;</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">                    version.equals(that.version);</span>
         }
 
         @Override
         public int hashCode()
         {
-<span class="nc" id="L249">            return Objects.hash(groupId, artifactId, version);</span>
+<span class="nc" id="L263">            return Objects.hash(groupId, artifactId, version);</span>
         }
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>
