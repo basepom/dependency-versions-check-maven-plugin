@@ -91,7 +91,7 @@ public abstract class AbstractDependencyVersionsMojo
     /**
      * List of version checks that will be removed from the version
      * check. This allows potential conflicts to be excluded.
-     * <br/>
+     * <br>
      * <pre>
      * &lt;exclusions&gt;
      *   &lt;exclusion&gt;
@@ -103,10 +103,11 @@ public abstract class AbstractDependencyVersionsMojo
      * </pre>
      * <p>
      * Each
-     * element consists of a dependency pattern <tt>[groupId]:[artifactId]</tt>
+     * element consists of a dependency pattern <code>[groupId]:[artifactId]</code>
      * that supports wildcards and an expected version (which is the
      * version is expected by the artifact) and a resolved version (the
      * version that the dependency resolution has chosen).
+     * </p>
      */
     @Parameter(alias = "exceptions")
     public VersionCheckExcludes[] exclusions = new VersionCheckExcludes[0];
@@ -136,9 +137,9 @@ public abstract class AbstractDependencyVersionsMojo
     public boolean quiet = false;
 
     /**
-     * Dependency resolution scope. Defaults to <tt>test</tt>. Valid
-     * choices are <tt>compile+runtime</tt>, <tt>compile</tt>,
-     * <tt>test</tt> and <tt>runtime</tt>.
+     * Dependency resolution scope. Defaults to <code>test</code>. Valid
+     * choices are <code>compile+runtime</code>, <code>compile</code>,
+     * <code>test</code> and <code>runtime</code>.
      *
      * @since 3.0.0
      */
@@ -172,7 +173,7 @@ public abstract class AbstractDependencyVersionsMojo
 
     /**
      * Run dependency resolution in parallel with multiple
-     * threads. Should only ever set to <tt>false</tt> if the plugin
+     * threads. Should only ever set to <code>false</code> if the plugin
      * shows stability problems when resolving dependencies. Please <a
      * href="issue-management.html">file a bug</a> in that case, too.
      *
@@ -182,11 +183,11 @@ public abstract class AbstractDependencyVersionsMojo
     public boolean fastResolution = true;
 
     /**
-     * Fail the build if an artifact in <tt>system</tt> scope can not be resolved. Those are notoriously dependent on
+     * Fail the build if an artifact in <code>system</code> scope can not be resolved. Those are notoriously dependent on
      * the local build environment and some outright fail (e.g. referencing the <code>tools.jar</code>, which no longer exists in a JDK8+ environment).
-     * <br/>
-     * Setting this flag to <tt>true</tt> will fail the build if any <tt>system</tt> scoped artifact
-     * can not be resolved. This is almost never desired, except when building a project with a direct <tt>system</tt> scoped
+     * <br>
+     * Setting this flag to <code>true</code> will fail the build if any <code>system</code> scoped artifact
+     * can not be resolved. This is almost never desired, except when building a project with a direct <code>system</code> scoped
      * dependency.
      *
      * @since 3.0.0
@@ -209,10 +210,10 @@ public abstract class AbstractDependencyVersionsMojo
      * </pre>
      *
      * A resolver maps a specific strategy to a list of includes.
-     * The include syntax is <tt>[group-id]:[artifact-id]</tt> where each pattern segment
-     * supports full and partial wildcards (<tt>*</tt>).
-     * <br/>
-     * The plugin includes some default strategies: <tt>apr</tt>, <tt>default</tt>, <tt>single-digit</tt> and <tt>two-digits-backward-compatible</tt>.
+     * The include syntax is <code>[group-id]:[artifact-id]</code> where each pattern segment
+     * supports full and partial wildcards (<code>*</code>).
+     * <br>
+     * The plugin includes some default strategies: <code>apr</code>, <code>default</code>, <code>single-digit</code> and <code>two-digits-backward-compatible</code>.
      * Additional strategies can be defined and added to the plugin classpath.
      */
     @Parameter
@@ -221,7 +222,7 @@ public abstract class AbstractDependencyVersionsMojo
     /**
      * Sets the default strategy to use to evaluate whether two dependency versions are compatible or not.
      *
-     * The <tt>default</tt> resolution strategy matches the Maven
+     * The <code>default</code> resolution strategy matches the Maven
      * dependency resolution itself; any two dependencies that maven
      * considers compatible will be accepted.
      *

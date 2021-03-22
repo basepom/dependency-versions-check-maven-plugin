@@ -68,7 +68,7 @@ public class DependencyVersionsCheckMojo
     /**
      * Fail the build only if a version conflict involves one or more direct dependencies. Direct dependency versions are controlled
      * by the project itself so any conflict here can be fixed by changing the version in the project.
-     * <br/>
+     * <br>
      * It is strongly recommended to review and fix these conflicts.
      *
      * @since 3.0.0
