@@ -1,155 +1,154 @@
-= Dependency versions check maven plugin
+# Dependency versions check maven plugin
 
-== Introduction
+## Introduction
 
 This plugin verifies that the resolved versions of project
 dependencies are mutually compatible to each other.
 
-Apache Maven will resolve all direct and transitive dependencies of a
-project and create a tree of dependencies. These dependencies are
-chosen based on versions, proximity to the project root and a number
-of other factors.
+This README only serves as a quick overview of the plugin. Please see the [Documentation Site](https://basepom.github.io/dependency-versions-check-maven-plugin/) for a full overview of the plugin and its function.
 
-However, Apache Maven operates under the assumption that every
-dependency is always backwards compatible and when two versions are
-compared, using the "higher" version will satisfy any dependency.
+## Cheat Sheet
 
-As the dependency resolution process is somewhat opaque, this may lead
-to situations where a dependency is resolved and a project compiles
-successfully but the resulting code does not actually work.
+* the `list` goal lists all dependencies and their final resolved versions
+* the `check` goal verifies that all resolved dependency versions match the project requirements
 
-Example with semantically versioned dependencies:
+The `list` goal is usually run interactively while the `check` goal should be run as part of a build.
 
-```
-project
-  |
-  +----- dependency A, version 3.0.0
-  |
-  +----- dependency B
-            |
-            +------- dependency A, version 1.0.0
-```
+### Configuration
 
-In this scenario, the dependency tree will contain dependency A 3.0.0
-and dependency B 1.0.0. If the project only uses classes from the
-3.0.0 version of dependency A and dependency B, the code will compile
-just fine. If any of these classes from dependency B now uses classes
-that are present in version 1.0.0 of dependency A but not in the 3.0.0
-version (semantic versioning allows for 1.0.0 and 3.0.0 to be neither
-forward nor backward compatible). In this scenario, there is no
-version of dependency A that will allow the code to actually
-work. However Maven neither warns nor fails the build.
-
-The dependency version check (dvc) plugin can detect these problems
-and warn or fail a build accordingly, thus capturing these problems at
-build time.
-
-In the scenario above, adding
-
-``` xml
-<plugin>
-    <groupId>org.basepom.maven</groupId>
-    <artifactId>dependency-versions-check-maven-plugin</artifactId>
-    <configuration>
-        <directConflictFailsBuild>true</directConflictFailsBuild>
-        <resolvers>
-            <resolver>
-                <strategy>apr</strategy>
-                <includes>
-                    <include>dependency:dependencyA</include>
-                </includes>
-            </resolver>
-        </resolvers>
-    </configuration>
-</plugin>
+```xml
+<configuration>
+    <skip>...</skip>
+    <includePomProjects>...</includePomProjects>
+    <quiet>...</quiet>
+    <scope>...</scope>
+    <deepScan>...</deepScan>
+    <directOnly>...</directOnly>
+    <managedOnly>...</managedOnly>
+    <fastResolution>...</fastResolution>
+    <unresolvedSystemArtifactsFailBuild>...</unresolvedSystemArtifactsFailBuild>
+    <defaultStrategy>...</defaultStrategy>
+    <conflictsOnly>...</conflictsOnly>
+    <conflictsFailBuild>...</conflictsFailBuild>
+    <directConflictsFailBuild>...</directConflictsFailBuild>
+    <exceptions>
+        <exception>
+            <dependency>...</dependency>
+            <expected>...</expected>
+            <resolved>...</resolved>
+        </exception>
+        <exception>
+            ...
+        </exception>
+    </exceptions>
+    <resolvers>
+        <resolver>
+            <strategy>...</strategy>
+            <includes>
+                <include>...</include>
+                ...
+            </includes>
+        </resolver>
+        <resolver>
+            ...
+        </resolver>
+    </resolvers>
+</configuration>
 ```
 
-would result in:
 
-```
-[ERROR] dependency:dependencyA: 3.0.0 (direct) - scope: compile - strategy: apr
-       1.0.0 expected by dependency:dependencyB
-       3.0.0 expected by *project:project*
-```
+configuration key  | function | type | command line | default
+-----------------  | -------- | ---- | ------------ | -------
+`skip` [*L*, *C*] | skip plugin execution  | boolean | `dvc.skip` | `false`
+`includePomProjects` [*L*, *C*] | also process pom projects | boolean |  `dvc.include-pom-projects` | `false`
+`quiet` [*L*, *C*]| suppress non-essential output | boolean |  `dvc.quiet` | `false`
+`scope` [*L*, *C*]| select the scope to use for artifact resolution | one of `compile`, `runtime`, `test`, `compile+runtime` |  `dvc.scope` | `test`
+`deepScan` [*L*, *C*] | resolve all artifacts, not just direct | boolean |  `dvc.deep-scan` | `false`
+`directOnly` [*L*, *C*] | check only direct dependencies | boolean | `dvc.direct-only` | `false`
+`managedOnly` [*L*, *C*] | check only managed dependencies | boolean | `dvc.managed-only` | `false`
+`fastResolution` [*L*, *C*] | use parallel dependency resolution | boolean | `dvc.fast-resolution` | `true`
+`unresolvedSystemArtifactsFailBuild` [*L*, *C*] | `system` scope artifacts that can not be resolved will fail the build | boolean |  `dvc.unresolved-system-artifacts-fail-build` | `false`
+`defaultStrategy` [*L*, *C*] | default artifact matching strategy | string | `dvc.default-strategy` | `default`
+`conflictsOnly` [*L*, *C*] | only report dependencies in conflict | boolean |  `dvc.conflicts-only` | `true` for `check` goal, `false` for `list` goal
+`conflictsFailBuild` / `failBuildInCaseOfConflict` [C] | any version conflict will fail the build | boolean |  `dvc.conflicts-fail-build` | `false`
+`directConflictsFailBuild` [*C*] | any conflict in a direct dependency will fail the build | boolean |  `dvc.direct-conflicts-fail-build` | `false`
+`exceptions` [*L*, *C*] | set of exceptions influencing the version resolution | set of exceptions | - | -
+`resolvers` [*L*, *C*] | resolver strategies for specific dependencies | set of resolvers | - | -
 
-and fail the build.
-
-
-== Maven Goals
-
-=== dependency-versions-check:list - display project dependencies
-
-This goal scans the dependency tree and displays all the dependencies of a project and the versions detected in the dependency tree.
-
-==== Supported Options (see below for details)
-
-* `<skip>...</skip>` (property: ${dvc.skip}) (default: false)
-
-Skip plugin execution.
+(*L* = `list` goal, *C* = `check` goal)
 
 
-* `<conflictOnly> ... </conflictOnly>` (property: `${dvc.conflict-only}`) (default: false)
+### Exceptions
 
-If true, only list dependencies that are in conflict.
+An exception defines an acceptable conflict which would otherwise fail the build:
 
-
-
-
-
-
-
-
-
-
-
-For example, for this project the set of dependencies looks like this (this is the output of the Maven dependency plugin):
-
-```
-aopalliance:aopalliance:jar:1.0:provided
-com.google.code.findbugs:jsr305:jar:3.0.2:compile
-com.google.errorprone:error_prone_annotations:jar:2.4.0:compile
-com.google.guava:failureaccess:jar:1.0.1:compile
-com.google.guava:guava:jar:29.0-jre:compile
-com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile
-com.google.inject:guice:jar:no_aop:4.2.1:provided
-com.google.j2objc:j2objc-annotations:jar:1.3:compile
-commons-io:commons-io:jar:2.6:compile
-javax.annotation:jsr250-api:jar:1.0:provided
-javax.enterprise:cdi-api:jar:1.0:provided
-javax.inject:javax.inject:jar:1:provided
-org.apache.commons:commons-lang3:jar:3.8.1:provided
-org.apache.maven.plugin-tools:maven-plugin-annotations:jar:3.6.0:provided
-org.apache.maven.resolver:maven-resolver-api:jar:1.4.2:provided
-org.apache.maven.resolver:maven-resolver-impl:jar:1.4.1:provided
-org.apache.maven.resolver:maven-resolver-spi:jar:1.4.1:provided
-org.apache.maven.resolver:maven-resolver-util:jar:1.4.2:compile
-org.apache.maven.shared:maven-shared-utils:jar:3.3.3:compile
-org.apache.maven:maven-artifact:jar:3.6.3:provided
-org.apache.maven:maven-builder-support:jar:3.6.3:provided
-org.apache.maven:maven-core:jar:3.6.3:provided
-org.apache.maven:maven-model-builder:jar:3.6.3:provided
-org.apache.maven:maven-model:jar:3.6.3:provided
-org.apache.maven:maven-plugin-api:jar:3.6.3:provided
-org.apache.maven:maven-repository-metadata:jar:3.6.3:provided
-org.apache.maven:maven-resolver-provider:jar:3.6.3:provided
-org.apache.maven:maven-settings-builder:jar:3.6.3:provided
-org.apache.maven:maven-settings:jar:3.6.3:provided
-org.apiguardian:apiguardian-api:jar:1.1.0:test
-org.checkerframework:checker-qual:jar:2.11.1:compile
-org.codehaus.plexus:plexus-classworlds:jar:2.6.0:provided
-org.codehaus.plexus:plexus-component-annotations:jar:2.1.0:provided
-org.codehaus.plexus:plexus-interpolation:jar:1.25:provided
-org.codehaus.plexus:plexus-utils:jar:3.2.1:provided
-org.eclipse.sisu:org.eclipse.sisu.inject:jar:0.3.4:provided
-org.eclipse.sisu:org.eclipse.sisu.plexus:jar:0.3.4:provided
-org.junit.jupiter:junit-jupiter-api:jar:5.7.0:test
-org.junit.jupiter:junit-jupiter-engine:jar:5.7.0:test
-org.junit.platform:junit-platform-commons:jar:1.7.0:test
-org.junit.platform:junit-platform-engine:jar:1.7.0:test
-org.opentest4j:opentest4j:jar:1.2.0:test
-org.slf4j:slf4j-api:jar:1.7.30:provided
-org.sonatype.plexus:plexus-cipher:jar:1.4:provided
-org.sonatype.plexus:plexus-sec-dispatcher:jar:1.4:provided
+```xml
+<exceptions>
+    <exception>
+        <dependency>org.sonatype.plexus:plexus-cipher</dependency>
+        <expected>1.7</expected>
+        <resolved>1.4</resolved>
+    </exception>
+</exceptions>
 ```
 
-It is not clear from this list, why this version was chosen and (if a given dependencies was present with different versions), what versions were superseded.
+In this case, the `1.4` version of the dependency would be acceptable even if the build tree would require the `1.7` version.
+
+The `groupId` and `artifactId` components of the dependency name can use wildcards. An empty element (group or artifact) is treated as a wildcard.
+
+
+### Resolvers
+
+The standard strategy for determining which version of an artifact is used matches the strategy that maven itself employs. This should be sufficient for most uses.
+
+It is possible to configure specific strategies for subsets of artifacts (with a `resolver` configuration or even change the default strategy (using the `defaultStrategy` configuration).
+
+A resolver elements contains of a versioning strategy name and one or more include patterns to select the strategy for artifacts:
+
+```xml
+<configuration>
+    <resolvers>
+        <resolver>
+            <id>apache-dependencies</id>
+            <strategyName>apr</strategyName>
+            <includes>
+                <include>commons-configuration:commons-configuration</include>
+                <include>org.apache.*:</include>
+            </includes>
+        </resolver>
+    </resolvers>
+</configuration>
+```
+
+The following strategies are included:
+
+#### `default` - the default strategy
+
+This strategy matches the actual maven version resolution.
+
+It assumes that all smaller versions are compatible when replaced with larger numbers and compares version elements from left to right. E.g. 3.2.1 > 3.2 and 2.1.1 > 1.0.
+
+#### `apr` - Apache APR versioning (aka semantic versioning)
+
+Three digit versioning, assumes that for two versions to be compatible, the first digit must be identical, the middle digit indicates backwards compatibility (i.e. 1.2.x can replace 1.1.x but 1.4.x can not replace 1.5.x) and the third digit signifies the patch level (only bug fixes, full API compatibility).
+
+#### `two-digits-backward-compatible` - Relaxed APR versioning
+
+Similar to APR, but assumes that there is no "major" version digit (e.g. it is part of the artifact Id). All versions are backwards compatible. First digit must be the same or higher to be compatible (i.e. 2.0 can replace 1.2).
+
+#### `single-digit` - Single version number
+
+The version consists of a single number. Larger versions can replace smaller versions. The version number may contain additional letters or prefixes (i.e. r08 can replace r07).
+
+
+## Legal
+
+This is a friendly fork and rewrite of the [original dependency-version-check plugin](https://github.com/ning/maven-dependency-versions-check-plugin).
+
+Licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+
+&copy; 2010 Ning, Inc.
+
+&copy; 2011 Henning Schmiedehausen
+
+&copy; 2020-2021 the basepom project
