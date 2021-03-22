@@ -29,30 +29,30 @@ import static com.google.common.base.Preconditions.checkNotNull;
 <span class="nc" id="L29">public class VersionCheckExcludes</span>
 {
 <span class="nc" id="L31">    private String dependency = &quot;&quot;;</span>
-    private ComparableVersion expectedVersion;
-    private ComparableVersion resolvedVersion;
+    private ComparableVersion expected;
+    private ComparableVersion resolved;
 
     public void setDependency(final String dependency)
     {
 <span class="nc" id="L37">        this.dependency = checkNotNull(dependency, &quot;dependency is null&quot;).trim();</span>
 <span class="nc" id="L38">    }</span>
 
-    public void setExpectedVersion(final String version)
+    public void setExpected(final String version)
     {
 <span class="nc" id="L42">        checkNotNull(version, &quot;version is null&quot;);</span>
-<span class="nc" id="L43">        this.expectedVersion = new ComparableVersion(version);</span>
+<span class="nc" id="L43">        this.expected = new ComparableVersion(version);</span>
 <span class="nc" id="L44">    }</span>
 
-    public void setResolvedVersion(final String version)
+    public void setResolved(final String version)
     {
 <span class="nc" id="L48">        checkNotNull(version, &quot;version is null&quot;);</span>
-<span class="nc" id="L49">        this.resolvedVersion = new ComparableVersion(version);</span>
+<span class="nc" id="L49">        this.resolved = new ComparableVersion(version);</span>
 <span class="nc" id="L50">    }</span>
 
     public boolean isValid()
     {
-<span class="nc bnc" id="L54" title="All 4 branches missed.">        return (expectedVersion != null)</span>
-                &amp;&amp; (resolvedVersion != null);
+<span class="nc bnc" id="L54" title="All 4 branches missed.">        return (expected != null)</span>
+                &amp;&amp; (resolved != null);
     }
 
     public boolean matches(final DependencyNode dependencyNode, final ComparableVersion expectedVersion, final ComparableVersion resolvedVersion)
@@ -65,8 +65,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 <span class="nc" id="L65">        final QualifiedName artifactName = QualifiedName.fromDependencyNode(dependencyNode);</span>
 
 <span class="nc bnc" id="L67" title="All 2 branches missed.">        return matcher.matches(artifactName)</span>
-<span class="nc bnc" id="L68" title="All 2 branches missed.">                &amp;&amp; this.expectedVersion.equals(expectedVersion)</span>
-<span class="nc bnc" id="L69" title="All 2 branches missed.">                &amp;&amp; this.resolvedVersion.equals(resolvedVersion);</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">                &amp;&amp; this.expected.equals(expectedVersion)</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">                &amp;&amp; this.resolved.equals(resolvedVersion);</span>
     }
 
     @Override
@@ -74,8 +74,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
     {
 <span class="nc" id="L75">        return MoreObjects.toStringHelper(this)</span>
 <span class="nc" id="L76">                .add(&quot;dependency&quot;, dependency)</span>
-<span class="nc" id="L77">                .add(&quot;expectedVersion&quot;, expectedVersion)</span>
-<span class="nc" id="L78">                .add(&quot;resolvedVersion&quot;, resolvedVersion)</span>
+<span class="nc" id="L77">                .add(&quot;expected&quot;, expected)</span>
+<span class="nc" id="L78">                .add(&quot;resolved&quot;, resolved)</span>
 <span class="nc" id="L79">                .toString();</span>
     }
 
@@ -90,14 +90,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
         }
 <span class="nc" id="L91">        VersionCheckExcludes that = (VersionCheckExcludes) o;</span>
 <span class="nc bnc" id="L92" title="All 2 branches missed.">        return Objects.equals(dependency, that.dependency) &amp;&amp;</span>
-<span class="nc bnc" id="L93" title="All 2 branches missed.">                Objects.equals(expectedVersion, that.expectedVersion) &amp;&amp;</span>
-<span class="nc bnc" id="L94" title="All 2 branches missed.">                Objects.equals(resolvedVersion, that.resolvedVersion);</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">                Objects.equals(expected, that.expected) &amp;&amp;</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">                Objects.equals(resolved, that.resolved);</span>
     }
 
     @Override
     public int hashCode()
     {
-<span class="nc" id="L100">        return Objects.hash(dependency, expectedVersion, resolvedVersion);</span>
+<span class="nc" id="L100">        return Objects.hash(dependency, expected, resolved);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

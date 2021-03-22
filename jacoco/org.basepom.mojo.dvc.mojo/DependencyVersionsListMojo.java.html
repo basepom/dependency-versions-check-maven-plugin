@@ -49,56 +49,56 @@ import static com.google.common.base.Preconditions.checkState;
         extends AbstractDependencyVersionsMojo
 {
     /**
-     * Whether to list all dependencies or only dependencies in conflict. Default is to list all dependencies.
+     * List only dependencies in conflict or all dependencies.
      */
-<span class="nc" id="L54">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.conflict-only&quot;)</span>
-    public boolean conflictOnly = false;
+<span class="nc" id="L54">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.conflicts-only&quot;)</span>
+    public boolean conflictsOnly = false;
 
     @Override
     protected void doExecute(final ImmutableSetMultimap&lt;QualifiedName, VersionResolutionCollection&gt; resolutionMap, final DependencyMap rootDependencyMap)
             throws Exception
     {
-<span class="nc" id="L61">        final ImmutableMap&lt;QualifiedName, DependencyNode&gt; rootDependencies = rootDependencyMap.getAllDependencies();</span>
-<span class="nc" id="L62">        createLog(resolutionMap, rootDependencies);</span>
-<span class="nc" id="L63">    }</span>
-
-    private void createLog(final ImmutableSetMultimap&lt;QualifiedName, VersionResolutionCollection&gt; resolutionMap,
-            final ImmutableMap&lt;QualifiedName, DependencyNode&gt; rootDependencies)
-    {
-<span class="nc" id="L68">        final ImmutableMap&lt;QualifiedName, Collection&lt;VersionResolutionCollection&gt;&gt; filteredMap = ImmutableMap.copyOf(Maps.filterValues(</span>
-<span class="nc" id="L69">                resolutionMap.asMap(),</span>
+<span class="nc" id="L61">        final ImmutableMap&lt;QualifiedName, Collection&lt;VersionResolutionCollection&gt;&gt; filteredMap = ImmutableMap.copyOf(Maps.filterValues(</span>
+<span class="nc" id="L62">                resolutionMap.asMap(),</span>
                 v -&gt; {
                     // report if no condition is set.
-<span class="nc" id="L72">                    boolean report = true;</span>
+<span class="nc" id="L65">                    boolean report = true;</span>
 
-<span class="nc bnc" id="L74" title="All 2 branches missed.">                    if (conflictOnly) {</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">                    if (conflictsOnly) {</span>
                         // do not report if conflicts are requested but none exists
-<span class="nc" id="L76">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasConflict);</span>
+<span class="nc" id="L69">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasConflict);</span>
                     }
-<span class="nc bnc" id="L78" title="All 2 branches missed.">                    if (directOnly) {</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">                    if (directOnly) {</span>
                         // do not report if only directs are requested but it is not direct
-<span class="nc" id="L80">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasDirectDependencies);</span>
+<span class="nc" id="L73">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasDirectDependencies);</span>
                     }
 
-<span class="nc bnc" id="L83" title="All 2 branches missed.">                    if (managedOnly) {</span>
-<span class="nc" id="L84">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasManagedDependencies);</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">                    if (managedOnly) {</span>
+<span class="nc" id="L77">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasManagedDependencies);</span>
                     }
 
-<span class="nc" id="L87">                    return report;</span>
+<span class="nc" id="L80">                    return report;</span>
                 }));
 
-        // calculate padding for columnar output
-<span class="nc" id="L91">        final int namePadding = filteredMap.keySet().stream()</span>
-<span class="nc" id="L92">                .map(QualifiedName::length).reduce(0, Math::max);</span>
-<span class="nc" id="L93">        final int scopePadding = rootDependencies.entrySet().stream()</span>
-<span class="nc" id="L94">                .filter(e -&gt; filteredMap.containsKey(e.getKey()))</span>
-<span class="nc" id="L95">                .map(e -&gt; e.getValue().getDependency().getScope().length()).reduce(0, Math::max);</span>
+<span class="nc" id="L83">        LOG.report(quiet, &quot;%s%s dependencies%s for '%s' scope%s:&quot;,</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">                (directOnly ? &quot;Direct&quot; : &quot;All&quot;),</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">                (managedOnly ? &quot; managed&quot; : &quot;&quot;),</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">                (deepScan ? &quot; using deep scan&quot; : &quot;&quot;),</span>
+                scope,
+<span class="nc bnc" id="L88" title="All 2 branches missed.">                (conflictsOnly ? &quot;, reporting only conflicts&quot; : &quot;&quot;));</span>
 
-<span class="nc bnc" id="L97" title="All 2 branches missed.">        if (filteredMap.isEmpty()) {</span>
-<span class="nc" id="L98">            return;</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        if (filteredMap.isEmpty()) {</span>
+<span class="nc" id="L91">            return;</span>
         }
 
-<span class="nc bnc" id="L101" title="All 2 branches missed.">        LOG.info(&quot;%s dependencies for '%s' scope:&quot;, (directOnly ? &quot;Direct&quot; : &quot;All&quot;), scope);</span>
+<span class="nc" id="L94">        final ImmutableMap&lt;QualifiedName, DependencyNode&gt; rootDependencies = rootDependencyMap.getAllDependencies();</span>
+
+        // calculate padding for columnar output
+<span class="nc" id="L97">        final int namePadding = filteredMap.keySet().stream()</span>
+<span class="nc" id="L98">                .map(QualifiedName::length).reduce(0, Math::max);</span>
+<span class="nc" id="L99">        final int scopePadding = rootDependencies.entrySet().stream()</span>
+<span class="nc" id="L100">                .filter(e -&gt; filteredMap.containsKey(e.getKey()))</span>
+<span class="nc" id="L101">                .map(e -&gt; e.getValue().getDependency().getScope().length()).reduce(0, Math::max);</span>
 
 <span class="nc bnc" id="L103" title="All 2 branches missed.">        for (final Map.Entry&lt;QualifiedName, Collection&lt;VersionResolutionCollection&gt;&gt; entry : filteredMap.entrySet()) {</span>
 <span class="nc" id="L104">            final QualifiedName dependencyName = entry.getKey();</span>
