@@ -5,13 +5,15 @@ on:
     branches:
       - master
   pull_request:
+    branches:
+      - main
 
 jobs:
   ci:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java-version: [11, 14]
+        java-version: [11, 16]
 
     steps:
       - uses: actions/checkout@v2
@@ -27,7 +29,8 @@ jobs:
           java-version: ${{ matrix.java-version }}
       - name: Build
         run: |
-          ./mvnw -DskipTests=true -Dbasepom.check.skip-all=true -fae install
+          ./mvnw --version
+          ./mvnw -B -DskipTests=true -Dbasepom.check.skip-all=true -fae clean install
       - name: Test
         run: |
-          ./mvnw -fae verify
+          ./mvnw -B -fae verify
