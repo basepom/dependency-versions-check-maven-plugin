@@ -59,8 +59,10 @@ import static com.google.common.collect.ImmutableSetMultimap.toImmutableSetMulti
 
     /**
      * Fail the build if a conflict is detected. Any conflict (direct and transitive) will cause a failure.
+     *
+     * @since 3.0.0
      */
-<span class="nc" id="L63">    @Parameter(defaultValue = &quot;false&quot;, alias = &quot;failBuildInCaseOfConflict&quot;, property = &quot;dvc.conflicts-fail-build&quot;)</span>
+<span class="nc" id="L65">    @Parameter(defaultValue = &quot;false&quot;, alias = &quot;failBuildInCaseOfConflict&quot;, property = &quot;dvc.conflicts-fail-build&quot;)</span>
     protected boolean conflictsFailBuild = false;
 
     /**
@@ -71,148 +73,148 @@ import static com.google.common.collect.ImmutableSetMultimap.toImmutableSetMulti
      *
      * @since 3.0.0
      */
-<span class="nc" id="L74">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.direct-conflicts-fail-build&quot;)</span>
+<span class="nc" id="L76">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.direct-conflicts-fail-build&quot;)</span>
     protected boolean directConflictsFailBuild = false;
 
     protected void doExecute(final ImmutableSetMultimap&lt;QualifiedName, VersionResolutionCollection&gt; resolutionMap, final DependencyMap rootDependencyMap)
             throws Exception
     {
         // filter out what to display.
-<span class="nc" id="L81">        final ImmutableMap&lt;QualifiedName, Collection&lt;VersionResolutionCollection&gt;&gt; filteredMap = ImmutableMap.copyOf(Maps.filterValues(</span>
-<span class="nc" id="L82">                resolutionMap.asMap(),</span>
+<span class="nc" id="L83">        final ImmutableMap&lt;QualifiedName, Collection&lt;VersionResolutionCollection&gt;&gt; filteredMap = ImmutableMap.copyOf(Maps.filterValues(</span>
+<span class="nc" id="L84">                resolutionMap.asMap(),</span>
                 v -&gt; {
                     // report if no condition is set.
-<span class="nc" id="L85">                    boolean report = true;</span>
+<span class="nc" id="L87">                    boolean report = true;</span>
 
-<span class="nc bnc" id="L87" title="All 2 branches missed.">                    if (conflictsOnly) {</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">                    if (conflictsOnly) {</span>
                         // do not report if conflicts are requested but none exists
-<span class="nc" id="L89">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasConflict);</span>
+<span class="nc" id="L91">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasConflict);</span>
                     }
-<span class="nc bnc" id="L91" title="All 2 branches missed.">                    if (directOnly) {</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">                    if (directOnly) {</span>
                         // do not report if only directs are requested but it is not direct
-<span class="nc" id="L93">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasDirectDependencies);</span>
+<span class="nc" id="L95">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasDirectDependencies);</span>
                     }
 
-<span class="nc bnc" id="L96" title="All 2 branches missed.">                    if (managedOnly) {</span>
-<span class="nc" id="L97">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasManagedDependencies);</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">                    if (managedOnly) {</span>
+<span class="nc" id="L99">                        report &amp;= v.stream().anyMatch(VersionResolutionCollection::hasManagedDependencies);</span>
                     }
 
-<span class="nc" id="L100">                    return report;</span>
+<span class="nc" id="L102">                    return report;</span>
                 }));
 
-<span class="nc" id="L103">        LOG.report(quiet, &quot;Checking %s%s dependencies%s for '%s' scope%s&quot;,</span>
-<span class="nc bnc" id="L104" title="All 2 branches missed.">                (directOnly ? &quot;direct&quot; : &quot;all&quot;),</span>
-<span class="nc bnc" id="L105" title="All 2 branches missed.">                (managedOnly ? &quot;, managed&quot; : &quot;&quot;),</span>
-<span class="nc bnc" id="L106" title="All 2 branches missed.">                (deepScan ? &quot; using deep scan&quot; : &quot;&quot;),</span>
+<span class="nc" id="L105">        LOG.report(quiet, &quot;Checking %s%s dependencies%s for '%s' scope%s&quot;,</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">                (directOnly ? &quot;direct&quot; : &quot;all&quot;),</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">                (managedOnly ? &quot;, managed&quot; : &quot;&quot;),</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">                (deepScan ? &quot; using deep scan&quot; : &quot;&quot;),</span>
                 scope,
-<span class="nc bnc" id="L108" title="All 2 branches missed.">                (conflictsOnly ? &quot;, reporting only conflicts&quot; : &quot;&quot;));</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">                (conflictsOnly ? &quot;, reporting only conflicts&quot; : &quot;&quot;));</span>
 
-<span class="nc bnc" id="L110" title="All 2 branches missed.">        if (filteredMap.isEmpty()) {</span>
-<span class="nc" id="L111">            return;</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        if (filteredMap.isEmpty()) {</span>
+<span class="nc" id="L113">            return;</span>
         }
 
-<span class="nc" id="L114">        final ImmutableMap&lt;QualifiedName, DependencyNode&gt; rootDependencies = rootDependencyMap.getAllDependencies();</span>
+<span class="nc" id="L116">        final ImmutableMap&lt;QualifiedName, DependencyNode&gt; rootDependencies = rootDependencyMap.getAllDependencies();</span>
 
-<span class="nc" id="L116">        boolean directConflicts = false;</span>
-<span class="nc" id="L117">        boolean transitiveConflicts = false;</span>
+<span class="nc" id="L118">        boolean directConflicts = false;</span>
+<span class="nc" id="L119">        boolean transitiveConflicts = false;</span>
 
-<span class="nc bnc" id="L119" title="All 2 branches missed.">        for (final Map.Entry&lt;QualifiedName, Collection&lt;VersionResolutionCollection&gt;&gt; entry : filteredMap.entrySet()) {</span>
-<span class="nc" id="L120">            final ImmutableSetMultimap&lt;ComparableVersion, VersionResolutionCollection&gt; versionMap = entry.getValue().stream()</span>
-<span class="nc" id="L121">                    .collect(toImmutableSetMultimap(VersionResolutionCollection::getExpectedVersion, Function.identity()));</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        for (final Map.Entry&lt;QualifiedName, Collection&lt;VersionResolutionCollection&gt;&gt; entry : filteredMap.entrySet()) {</span>
+<span class="nc" id="L122">            final ImmutableSetMultimap&lt;ComparableVersion, VersionResolutionCollection&gt; versionMap = entry.getValue().stream()</span>
+<span class="nc" id="L123">                    .collect(toImmutableSetMultimap(VersionResolutionCollection::getExpectedVersion, Function.identity()));</span>
 
-<span class="nc" id="L123">            boolean willWarn = false;</span>
-<span class="nc" id="L124">            boolean willFail = false;</span>
+<span class="nc" id="L125">            boolean willWarn = false;</span>
+<span class="nc" id="L126">            boolean willFail = false;</span>
 
-<span class="nc" id="L126">            final boolean isDirect = entry.getValue().stream().anyMatch(VersionResolutionCollection::hasDirectDependencies);</span>
-<span class="nc bnc" id="L127" title="All 2 branches missed.">            final boolean isManaged = (rootDependencies.get(entry.getKey()).getManagedBits() &amp; DependencyNode.MANAGED_VERSION) != 0;</span>
+<span class="nc" id="L128">            final boolean isDirect = entry.getValue().stream().anyMatch(VersionResolutionCollection::hasDirectDependencies);</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">            final boolean isManaged = (rootDependencies.get(entry.getKey()).getManagedBits() &amp; DependencyNode.MANAGED_VERSION) != 0;</span>
 
-<span class="nc" id="L129">            final Version dependencyVersion = rootDependencies.get(entry.getKey()).getVersion();</span>
-<span class="nc bnc" id="L130" title="All 2 branches missed.">            checkState(dependencyVersion != null, &quot;Dependency Version for %s is null! File a bug!&quot;, rootDependencies.get(entry.getKey()));</span>
-<span class="nc" id="L131">            final ComparableVersion resolvedVersion = new ComparableVersion(dependencyVersion.toString());</span>
+<span class="nc" id="L131">            final Version dependencyVersion = rootDependencies.get(entry.getKey()).getVersion();</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">            checkState(dependencyVersion != null, &quot;Dependency Version for %s is null! File a bug!&quot;, rootDependencies.get(entry.getKey()));</span>
+<span class="nc" id="L133">            final ComparableVersion resolvedVersion = new ComparableVersion(dependencyVersion.toString());</span>
 
-<span class="nc" id="L133">            final QualifiedName dependencyName = entry.getKey();</span>
-<span class="nc" id="L134">            final Strategy strategy = strategyCache.forQualifiedName(dependencyName);</span>
+<span class="nc" id="L135">            final QualifiedName dependencyName = entry.getKey();</span>
+<span class="nc" id="L136">            final Strategy strategy = strategyCache.forQualifiedName(dependencyName);</span>
 
-<span class="nc" id="L136">            final MessageBuilder mb = MessageUtils.buffer();</span>
+<span class="nc" id="L138">            final MessageBuilder mb = MessageUtils.buffer();</span>
 
-<span class="nc" id="L138">            mb.strong(dependencyName.getShortName())</span>
-<span class="nc" id="L139">                    .a(&quot;: &quot;)</span>
-<span class="nc" id="L140">                    .strong(resolvedVersion)</span>
-<span class="nc" id="L141">                    .format(&quot; (%s%s) - scope: %s - strategy: %s&quot;,</span>
-<span class="nc bnc" id="L142" title="All 2 branches missed.">                            isDirect ? &quot;direct&quot; : &quot;transitive&quot;,</span>
-<span class="nc bnc" id="L143" title="All 2 branches missed.">                            isManaged ? &quot;, managed&quot; : &quot;&quot;,</span>
-<span class="nc" id="L144">                            rootDependencies.get(dependencyName).getDependency().getScope(),</span>
-<span class="nc" id="L145">                            strategy.getName()</span>
+<span class="nc" id="L140">            mb.strong(dependencyName.getShortName())</span>
+<span class="nc" id="L141">                    .a(&quot;: &quot;)</span>
+<span class="nc" id="L142">                    .strong(resolvedVersion)</span>
+<span class="nc" id="L143">                    .format(&quot; (%s%s) - scope: %s - strategy: %s&quot;,</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                            isDirect ? &quot;direct&quot; : &quot;transitive&quot;,</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">                            isManaged ? &quot;, managed&quot; : &quot;&quot;,</span>
+<span class="nc" id="L146">                            rootDependencies.get(dependencyName).getDependency().getScope(),</span>
+<span class="nc" id="L147">                            strategy.getName()</span>
                     )
-<span class="nc" id="L147">                    .newline();</span>
+<span class="nc" id="L149">                    .newline();</span>
 
-<span class="nc" id="L149">            final int versionPadding = versionMap.keySet().stream().map(v -&gt; v.toString().length()).reduce(0, Math::max);</span>
-<span class="nc bnc" id="L150" title="All 2 branches missed.">            for (final Map.Entry&lt;ComparableVersion, Collection&lt;VersionResolutionCollection&gt;&gt; versionEntry : versionMap.asMap().entrySet()) {</span>
-<span class="nc" id="L151">                final boolean hasConflictVersion = versionEntry.getValue().stream().anyMatch(VersionResolutionCollection::hasConflict);</span>
-<span class="nc" id="L152">                final boolean perfectMatch = versionEntry.getValue().stream().anyMatch(v -&gt; v.isMatchFor(resolvedVersion));</span>
-<span class="nc" id="L153">                final String paddedVersion = Strings.padEnd(versionEntry.getKey().toString(), versionPadding + 1, ' ');</span>
+<span class="nc" id="L151">            final int versionPadding = versionMap.keySet().stream().map(v -&gt; v.toString().length()).reduce(0, Math::max);</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">            for (final Map.Entry&lt;ComparableVersion, Collection&lt;VersionResolutionCollection&gt;&gt; versionEntry : versionMap.asMap().entrySet()) {</span>
+<span class="nc" id="L153">                final boolean hasConflictVersion = versionEntry.getValue().stream().anyMatch(VersionResolutionCollection::hasConflict);</span>
+<span class="nc" id="L154">                final boolean perfectMatch = versionEntry.getValue().stream().anyMatch(v -&gt; v.isMatchFor(resolvedVersion));</span>
+<span class="nc" id="L155">                final String paddedVersion = Strings.padEnd(versionEntry.getKey().toString(), versionPadding + 1, ' ');</span>
 
-<span class="nc" id="L155">                mb.a(&quot;       &quot;);</span>
+<span class="nc" id="L157">                mb.a(&quot;       &quot;);</span>
 
-<span class="nc bnc" id="L157" title="All 2 branches missed.">                if (hasConflictVersion) {</span>
-<span class="nc" id="L158">                    mb.failure(paddedVersion);</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">                if (hasConflictVersion) {</span>
+<span class="nc" id="L160">                    mb.failure(paddedVersion);</span>
                 }
-<span class="nc bnc" id="L160" title="All 2 branches missed.">                else if (perfectMatch) {</span>
-<span class="nc" id="L161">                    mb.success(paddedVersion);</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">                else if (perfectMatch) {</span>
+<span class="nc" id="L163">                    mb.success(paddedVersion);</span>
                 }
                 else {
-<span class="nc" id="L164">                    mb.a(paddedVersion);</span>
+<span class="nc" id="L166">                    mb.a(paddedVersion);</span>
                 }
 
-<span class="nc" id="L167">                mb.a(&quot;expected by &quot;);</span>
+<span class="nc" id="L169">                mb.a(&quot;expected by &quot;);</span>
 
-<span class="nc" id="L169">                for (Iterator&lt;VersionResolutionElement&gt; it = versionEntry.getValue().stream()</span>
-<span class="nc" id="L170">                        .flatMap(v -&gt; v.getRequestingDependencies().stream())</span>
-<span class="nc bnc" id="L171" title="All 2 branches missed.">                        .iterator(); it.hasNext(); ) {</span>
-<span class="nc" id="L172">                    final VersionResolutionElement versionResolutionElement = it.next();</span>
-<span class="nc" id="L173">                    final String name = versionResolutionElement.getRequestingDependency().getShortName();</span>
+<span class="nc" id="L171">                for (Iterator&lt;VersionResolutionElement&gt; it = versionEntry.getValue().stream()</span>
+<span class="nc" id="L172">                        .flatMap(v -&gt; v.getRequestingDependencies().stream())</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">                        .iterator(); it.hasNext(); ) {</span>
+<span class="nc" id="L174">                    final VersionResolutionElement versionResolutionElement = it.next();</span>
+<span class="nc" id="L175">                    final String name = versionResolutionElement.getRequestingDependency().getShortName();</span>
 
-<span class="nc bnc" id="L175" title="All 2 branches missed.">                    if (versionResolutionElement.isDirectDependency()) {</span>
-<span class="nc" id="L176">                        mb.strong(&quot;*&quot; + name + &quot;*&quot;);</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">                    if (versionResolutionElement.isDirectDependency()) {</span>
+<span class="nc" id="L178">                        mb.strong(&quot;*&quot; + name + &quot;*&quot;);</span>
                     }
                     else {
-<span class="nc" id="L179">                        mb.a(name);</span>
+<span class="nc" id="L181">                        mb.a(name);</span>
                     }
-<span class="nc bnc" id="L181" title="All 2 branches missed.">                    if (it.hasNext()) {</span>
-<span class="nc" id="L182">                        mb.a(&quot;, &quot;);</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">                    if (it.hasNext()) {</span>
+<span class="nc" id="L184">                        mb.a(&quot;, &quot;);</span>
                     }
-<span class="nc" id="L184">                }</span>
+<span class="nc" id="L186">                }</span>
 
-<span class="nc" id="L186">                mb.newline();</span>
+<span class="nc" id="L188">                mb.newline();</span>
 
-<span class="nc bnc" id="L188" title="All 2 branches missed.">                if (hasConflictVersion) {</span>
-<span class="nc" id="L189">                    willWarn = true;</span>
-<span class="nc" id="L190">                    willFail |= conflictsFailBuild; // any conflict fails build.</span>
-<span class="nc bnc" id="L191" title="All 4 branches missed.">                    willFail |= isDirect &amp;&amp; directConflictsFailBuild;</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">                if (hasConflictVersion) {</span>
+<span class="nc" id="L191">                    willWarn = true;</span>
+<span class="nc" id="L192">                    willFail |= conflictsFailBuild; // any conflict fails build.</span>
+<span class="nc bnc" id="L193" title="All 4 branches missed.">                    willFail |= isDirect &amp;&amp; directConflictsFailBuild;</span>
 
-<span class="nc" id="L193">                    directConflicts |= isDirect;       // any direct dependency in conflict</span>
-<span class="nc bnc" id="L194" title="All 2 branches missed.">                    transitiveConflicts |= !isDirect;  // any transitive dependency in conflict</span>
+<span class="nc" id="L195">                    directConflicts |= isDirect;       // any direct dependency in conflict</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">                    transitiveConflicts |= !isDirect;  // any transitive dependency in conflict</span>
                 }
-<span class="nc" id="L196">            }</span>
+<span class="nc" id="L198">            }</span>
 
-<span class="nc bnc" id="L198" title="All 2 branches missed.">            if (willFail) {</span>
-<span class="nc" id="L199">                LOG.error(&quot;%s&quot;, mb);</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">            if (willFail) {</span>
+<span class="nc" id="L201">                LOG.error(&quot;%s&quot;, mb);</span>
             }
-<span class="nc bnc" id="L201" title="All 2 branches missed.">            else if (willWarn) {</span>
-<span class="nc" id="L202">                LOG.warn(&quot;%s&quot;, mb);</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">            else if (willWarn) {</span>
+<span class="nc" id="L204">                LOG.warn(&quot;%s&quot;, mb);</span>
             }
             else {
-<span class="nc" id="L205">                LOG.info(&quot;%s&quot;, mb);</span>
+<span class="nc" id="L207">                LOG.info(&quot;%s&quot;, mb);</span>
             }
-<span class="nc" id="L207">        }</span>
+<span class="nc" id="L209">        }</span>
 
-<span class="nc bnc" id="L209" title="All 6 branches missed.">        if (directConflicts &amp;&amp; (conflictsFailBuild || directConflictsFailBuild)) {</span>
-<span class="nc" id="L210">            throw new MojoFailureException(&quot;Version conflict in direct dependencies detected!&quot;);</span>
+<span class="nc bnc" id="L211" title="All 6 branches missed.">        if (directConflicts &amp;&amp; (conflictsFailBuild || directConflictsFailBuild)) {</span>
+<span class="nc" id="L212">            throw new MojoFailureException(&quot;Version conflict in direct dependencies detected!&quot;);</span>
         }
 
-<span class="nc bnc" id="L213" title="All 4 branches missed.">        if (transitiveConflicts &amp;&amp; conflictsFailBuild) {</span>
-<span class="nc" id="L214">            throw new MojoFailureException(&quot;Version conflict in transitive dependencies detected!&quot;);</span>
+<span class="nc bnc" id="L215" title="All 4 branches missed.">        if (transitiveConflicts &amp;&amp; conflictsFailBuild) {</span>
+<span class="nc" id="L216">            throw new MojoFailureException(&quot;Version conflict in transitive dependencies detected!&quot;);</span>
         }
-<span class="nc" id="L216">    }</span>
+<span class="nc" id="L218">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

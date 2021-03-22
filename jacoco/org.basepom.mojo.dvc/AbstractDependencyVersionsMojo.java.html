@@ -124,7 +124,7 @@ import static com.google.common.base.Preconditions.checkState;
      *
      * @since 3.0.0
      */
-<span class="nc" id="L127">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.includePomProjects&quot;)</span>
+<span class="nc" id="L127">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.include-pom-projects&quot;)</span>
     public boolean includePomProjects = false;
 
     /**
@@ -224,8 +224,10 @@ import static com.google.common.base.Preconditions.checkState;
      * The &lt;tt&gt;default&lt;/tt&gt; resolution strategy matches the Maven
      * dependency resolution itself; any two dependencies that maven
      * considers compatible will be accepted.
+     *
+     * @since 3.0.0
      */
-<span class="nc" id="L228">    @Parameter(defaultValue = &quot;default&quot;, property = &quot;dependency-versions-check.default&quot;)</span>
+<span class="nc" id="L230">    @Parameter(defaultValue = &quot;default&quot;, property = &quot;dvc.default-strategy&quot;)</span>
     public String defaultStrategy = &quot;default&quot;;
 
     protected StrategyCache strategyCache;
@@ -234,44 +236,44 @@ import static com.google.common.base.Preconditions.checkState;
             throws MojoExecutionException, MojoFailureException
     {
         try {
-<span class="nc bnc" id="L237" title="All 2 branches missed.">            for (VersionCheckExcludes exclusion : exclusions) {</span>
-<span class="nc" id="L238">                checkState(exclusion.isValid(), &quot;Invalid exclusion specification: '%s'&quot;, exclusion);</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">            for (VersionCheckExcludes exclusion : exclusions) {</span>
+<span class="nc" id="L240">                checkState(exclusion.isValid(), &quot;Invalid exclusion specification: '%s'&quot;, exclusion);</span>
             }
 
-<span class="nc bnc" id="L241" title="All 4 branches missed.">            checkState(!Strings.nullToEmpty(scope).trim().isEmpty() &amp;&amp; VALID_SCOPES.contains(scope), &quot;Scope '%s' is invalid&quot;, scope);</span>
+<span class="nc bnc" id="L243" title="All 4 branches missed.">            checkState(!Strings.nullToEmpty(scope).trim().isEmpty() &amp;&amp; VALID_SCOPES.contains(scope), &quot;Scope '%s' is invalid&quot;, scope);</span>
 
-<span class="nc bnc" id="L243" title="All 2 branches missed.">            if (skip) {</span>
-<span class="nc" id="L244">                LOG.report(quiet, &quot;Skipping plugin execution&quot;);</span>
-<span class="nc" id="L245">                return;</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">            if (skip) {</span>
+<span class="nc" id="L246">                LOG.report(quiet, &quot;Skipping plugin execution&quot;);</span>
+<span class="nc" id="L247">                return;</span>
             }
 
-<span class="nc bnc" id="L248" title="All 4 branches missed.">            if (!includePomProjects &amp;&amp; &quot;pom&quot;.equals(project.getPackaging())) {</span>
-<span class="nc" id="L249">                LOG.report(quiet, &quot;Ignoring POM project&quot;);</span>
-<span class="nc" id="L250">                return;</span>
+<span class="nc bnc" id="L250" title="All 4 branches missed.">            if (!includePomProjects &amp;&amp; &quot;pom&quot;.equals(project.getPackaging())) {</span>
+<span class="nc" id="L251">                LOG.report(quiet, &quot;Ignoring POM project&quot;);</span>
+<span class="nc" id="L252">                return;</span>
             }
 
-<span class="nc" id="L253">            LOG.debug(&quot;Starting %s mojo run!&quot;, this.getClass().getSimpleName());</span>
+<span class="nc" id="L255">            LOG.debug(&quot;Starting %s mojo run!&quot;, this.getClass().getSimpleName());</span>
 
-<span class="nc" id="L255">            this.strategyCache = new StrategyCache(strategyProvider, resolvers, defaultStrategy);</span>
+<span class="nc" id="L257">            this.strategyCache = new StrategyCache(strategyProvider, resolvers, defaultStrategy);</span>
 
-<span class="nc" id="L257">            final ScopeLimitingFilter scopeFilter = createScopeFilter();</span>
-<span class="nc" id="L258">            final DependencyMap rootDependencyMap = new DependencyMapBuilder(this).mapProject(project, scopeFilter);</span>
+<span class="nc" id="L259">            final ScopeLimitingFilter scopeFilter = createScopeFilter();</span>
+<span class="nc" id="L260">            final DependencyMap rootDependencyMap = new DependencyMapBuilder(this).mapProject(project, scopeFilter);</span>
 
-<span class="nc" id="L260">            try (DependencyTreeResolver dependencyTreeResolver = new DependencyTreeResolver(this, rootDependencyMap)) {</span>
-<span class="nc" id="L261">                final ImmutableSetMultimap&lt;QualifiedName, VersionResolutionCollection&gt; resolutionMap = dependencyTreeResolver.computeResolutionMap(project, scopeFilter);</span>
-<span class="nc" id="L262">                doExecute(resolutionMap, rootDependencyMap);</span>
+<span class="nc" id="L262">            try (DependencyTreeResolver dependencyTreeResolver = new DependencyTreeResolver(this, rootDependencyMap)) {</span>
+<span class="nc" id="L263">                final ImmutableSetMultimap&lt;QualifiedName, VersionResolutionCollection&gt; resolutionMap = dependencyTreeResolver.computeResolutionMap(project, scopeFilter);</span>
+<span class="nc" id="L264">                doExecute(resolutionMap, rootDependencyMap);</span>
             }
         }
-<span class="nc" id="L265">        catch (MojoExecutionException | MojoFailureException e) {</span>
-<span class="nc" id="L266">            throw e;</span>
+<span class="nc" id="L267">        catch (MojoExecutionException | MojoFailureException e) {</span>
+<span class="nc" id="L268">            throw e;</span>
         }
-<span class="nc" id="L268">        catch (Exception e) {</span>
-<span class="nc" id="L269">            throw new MojoExecutionException(&quot;While running mojo: &quot;, e);</span>
+<span class="nc" id="L270">        catch (Exception e) {</span>
+<span class="nc" id="L271">            throw new MojoExecutionException(&quot;While running mojo: &quot;, e);</span>
         }
         finally {
-<span class="nc" id="L272">            LOG.debug(&quot;Ended %s mojo run!&quot;, this.getClass().getSimpleName());</span>
+<span class="nc" id="L274">            LOG.debug(&quot;Ended %s mojo run!&quot;, this.getClass().getSimpleName());</span>
         }
-<span class="nc" id="L274">    }</span>
+<span class="nc" id="L276">    }</span>
 
     /**
      * Subclasses need to implement this method.
@@ -292,85 +294,85 @@ import static com.google.common.base.Preconditions.checkState;
      */
     protected ScopeLimitingFilter createScopeFilter()
     {
-<span class="nc" id="L295">        return ScopeLimitingFilter.computeDependencyScope(scope);</span>
+<span class="nc" id="L297">        return ScopeLimitingFilter.computeDependencyScope(scope);</span>
     }
 
     @Override
     public boolean useFastResolution()
     {
-<span class="nc" id="L301">        return fastResolution;</span>
+<span class="nc" id="L303">        return fastResolution;</span>
     }
 
     @Override
     public boolean useDeepScan()
     {
-<span class="nc" id="L307">        return deepScan;</span>
+<span class="nc" id="L309">        return deepScan;</span>
     }
 
     @Override
     public StrategyCache getStrategyCache()
     {
-<span class="nc" id="L313">        return strategyCache;</span>
+<span class="nc" id="L315">        return strategyCache;</span>
     }
 
     @Override
     public ProjectBuilder getProjectBuilder()
     {
-<span class="nc" id="L319">        return mavenProjectBuilder;</span>
+<span class="nc" id="L321">        return mavenProjectBuilder;</span>
     }
 
     @Override
     public ProjectDependenciesResolver getProjectDependenciesResolver()
     {
-<span class="nc" id="L325">        return projectDependenciesResolver;</span>
+<span class="nc" id="L327">        return projectDependenciesResolver;</span>
     }
 
     @Override
     public MavenProject getRootProject()
     {
-<span class="nc" id="L331">        return project;</span>
+<span class="nc" id="L333">        return project;</span>
     }
 
     @Override
     public List&lt;MavenProject&gt; getReactorProjects()
     {
-<span class="nc" id="L337">        return ImmutableList.copyOf(reactorProjects);</span>
+<span class="nc" id="L339">        return ImmutableList.copyOf(reactorProjects);</span>
     }
 
     @Override
     public RepositorySystemSession getRepositorySystemSession()
     {
-<span class="nc" id="L343">        return mavenSession.getRepositorySession();</span>
+<span class="nc" id="L345">        return mavenSession.getRepositorySession();</span>
     }
 
     @Override
-<span class="nc" id="L347">    public RepositorySystem getRepositorySystem() { return repositorySystem; }</span>
+<span class="nc" id="L349">    public RepositorySystem getRepositorySystem() { return repositorySystem; }</span>
 
     @Override
     public ProjectBuildingRequest createProjectBuildingRequest()
     {
-<span class="nc" id="L352">        DefaultProjectBuildingRequest buildingRequest = new DefaultProjectBuildingRequest(mavenSession.getProjectBuildingRequest());</span>
-<span class="nc" id="L353">        buildingRequest.setRemoteRepositories(project.getRemoteArtifactRepositories());</span>
-<span class="nc" id="L354">        return buildingRequest;</span>
+<span class="nc" id="L354">        DefaultProjectBuildingRequest buildingRequest = new DefaultProjectBuildingRequest(mavenSession.getProjectBuildingRequest());</span>
+<span class="nc" id="L355">        buildingRequest.setRemoteRepositories(project.getRemoteArtifactRepositories());</span>
+<span class="nc" id="L356">        return buildingRequest;</span>
     }
 
     @Override
     public VersionRangeRequest createVersionRangeRequest(Artifact artifact)
     {
-<span class="nc" id="L360">        checkNotNull(artifact, &quot;artifact is null&quot;);</span>
-<span class="nc" id="L361">        return new VersionRangeRequest(artifact, project.getRemoteProjectRepositories(), &quot;&quot;);</span>
+<span class="nc" id="L362">        checkNotNull(artifact, &quot;artifact is null&quot;);</span>
+<span class="nc" id="L363">        return new VersionRangeRequest(artifact, project.getRemoteProjectRepositories(), &quot;&quot;);</span>
     }
 
     @Override
     public List&lt;VersionCheckExcludes&gt; getExclusions()
     {
-<span class="nc" id="L367">        return Arrays.asList(exclusions);</span>
+<span class="nc" id="L369">        return Arrays.asList(exclusions);</span>
     }
 
     @Override
     public boolean isUnresolvedSystemArtifactsFailBuild()
     {
-<span class="nc" id="L373">        return unresolvedSystemArtifactsFailBuild;</span>
+<span class="nc" id="L375">        return unresolvedSystemArtifactsFailBuild;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>
