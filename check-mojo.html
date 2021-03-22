@@ -34,7 +34,7 @@
           <ul class="breadcrumb">
         <li id="publishDate">Last Published: 2021-03-22<span class="divider">|</span>
 </li>
-          <li id="projectVersion">Version: 3.0.1-SNAPSHOT</li>
+          <li id="projectVersion">Version: 3.1.0</li>
           </ul>
         </div>
       </header>
@@ -70,7 +70,7 @@
       
 <p><b>Full name</b>:</p>
       
-<p>org.basepom.maven:dependency-versions-check-maven-plugin:3.0.1-SNAPSHOT:check</p>
+<p>org.basepom.maven:dependency-versions-check-maven-plugin:3.1.0:check</p>
       
 <p><b>Description</b>:</p>
       
@@ -279,12 +279,12 @@ it does not actually build any artifacts.<br /><b>Default value is</b>: <code>fa
 
 A resolver maps a specific strategy to a list of includes. The
 include syntax is <code>[group-id]:[artifact-id]</code> where each
-pattern segment supports full and partial wildcards (<code>*</code>).
-<br />
+pattern segment supports full and partial wildcards
+(<code>*</code>). <br />
 The plugin includes some default strategies: <code>apr</code>,
 <code>default</code>, <code>single-digit</code> and
-<code>two-digits-backward-compatible</code>. Additional strategies can
-be defined and added to the plugin classpath.<br /></td>
+<code>two-digits-backward-compatible</code>. Additional strategies
+can be defined and added to the plugin classpath.<br /></td>
           </tr>
           
 <tr class="b">
@@ -319,14 +319,14 @@ choices are <code>compile+runtime</code>, <code>compile</code>,
             
 <td><code>3.0.0</code></td>
             
-<td>Fail the build if an artifact in <code>system</code> scope can not be
-resolved. Those are notoriously dependent on the local build
+<td>Fail the build if an artifact in <code>system</code> scope can not
+be resolved. Those are notoriously dependent on the local build
 environment and some outright fail (e.g. referencing the
 <code>tools.jar</code>, which no longer exists in a JDK8+
 environment). <br />
 Setting this flag to <code>true</code> will fail the build if any
-<code>system</code> scoped artifact can not be resolved. This is almost
-never desired, except when building a project with a direct
+<code>system</code> scoped artifact can not be resolved. This is
+almost never desired, except when building a project with a direct
 <code>system</code> scoped dependency.<br /><b>Default value is</b>: <code>false</code>.<br /><b>User property is</b>: <code>dvc.unresolved-system-artifacts-fail-build</code>.<br /></td>
           </tr>
         </table>
@@ -559,12 +559,12 @@ it does not actually build any artifacts.</div>
 
 A resolver maps a specific strategy to a list of includes. The
 include syntax is <code>[group-id]:[artifact-id]</code> where each
-pattern segment supports full and partial wildcards (<code>*</code>).
-<br />
+pattern segment supports full and partial wildcards
+(<code>*</code>). <br />
 The plugin includes some default strategies: <code>apr</code>,
 <code>default</code>, <code>single-digit</code> and
-<code>two-digits-backward-compatible</code>. Additional strategies can
-be defined and added to the plugin classpath.</div>
+<code>two-digits-backward-compatible</code>. Additional strategies
+can be defined and added to the plugin classpath.</div>
         
 <ul>
           
@@ -606,14 +606,14 @@ choices are <code>compile+runtime</code>, <code>compile</code>,
         </ul><hr /></section><section>
 <h4><a name="a.3CunresolvedSystemArtifactsFailBuild.3E"></a><b><a name="unresolvedSystemArtifactsFailBuild">&lt;unresolvedSystemArtifactsFailBuild&gt;</a></b></h4>
         
-<div>Fail the build if an artifact in <code>system</code> scope can not be
-resolved. Those are notoriously dependent on the local build
+<div>Fail the build if an artifact in <code>system</code> scope can not
+be resolved. Those are notoriously dependent on the local build
 environment and some outright fail (e.g. referencing the
 <code>tools.jar</code>, which no longer exists in a JDK8+
 environment). <br />
 Setting this flag to <code>true</code> will fail the build if any
-<code>system</code> scoped artifact can not be resolved. This is almost
-never desired, except when building a project with a direct
+<code>system</code> scoped artifact can not be resolved. This is
+almost never desired, except when building a project with a direct
 <code>system</code> scoped dependency.</div>
         
 <ul>

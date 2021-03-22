@@ -91,7 +91,7 @@ import static com.google.common.base.Preconditions.checkState;
     /**
      * List of version checks that will be removed from the version
      * check. This allows potential conflicts to be excluded.
-     * &lt;br/&gt;
+     * &lt;br&gt;
      * &lt;pre&gt;
      * &amp;lt;exclusions&amp;gt;
      *   &amp;lt;exclusion&amp;gt;
@@ -103,18 +103,19 @@ import static com.google.common.base.Preconditions.checkState;
      * &lt;/pre&gt;
      * &lt;p&gt;
      * Each
-     * element consists of a dependency pattern &lt;tt&gt;[groupId]:[artifactId]&lt;/tt&gt;
+     * element consists of a dependency pattern &lt;code&gt;[groupId]:[artifactId]&lt;/code&gt;
      * that supports wildcards and an expected version (which is the
      * version is expected by the artifact) and a resolved version (the
      * version that the dependency resolution has chosen).
+     * &lt;/p&gt;
      */
-<span class="nc" id="L111">    @Parameter(alias = &quot;exceptions&quot;)</span>
+<span class="nc" id="L112">    @Parameter(alias = &quot;exceptions&quot;)</span>
     public VersionCheckExcludes[] exclusions = new VersionCheckExcludes[0];
 
     /**
      * Skip the plugin execution.
      */
-<span class="nc" id="L117">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.skip&quot;)</span>
+<span class="nc" id="L118">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.skip&quot;)</span>
     public boolean skip = false;
 
     /**
@@ -124,7 +125,7 @@ import static com.google.common.base.Preconditions.checkState;
      *
      * @since 3.0.0
      */
-<span class="nc" id="L127">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.include-pom-projects&quot;)</span>
+<span class="nc" id="L128">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.include-pom-projects&quot;)</span>
     public boolean includePomProjects = false;
 
     /**
@@ -132,17 +133,17 @@ import static com.google.common.base.Preconditions.checkState;
      *
      * @since 3.0.0
      */
-<span class="nc" id="L135">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.quiet&quot;)</span>
+<span class="nc" id="L136">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.quiet&quot;)</span>
     public boolean quiet = false;
 
     /**
-     * Dependency resolution scope. Defaults to &lt;tt&gt;test&lt;/tt&gt;. Valid
-     * choices are &lt;tt&gt;compile+runtime&lt;/tt&gt;, &lt;tt&gt;compile&lt;/tt&gt;,
-     * &lt;tt&gt;test&lt;/tt&gt; and &lt;tt&gt;runtime&lt;/tt&gt;.
+     * Dependency resolution scope. Defaults to &lt;code&gt;test&lt;/code&gt;. Valid
+     * choices are &lt;code&gt;compile+runtime&lt;/code&gt;, &lt;code&gt;compile&lt;/code&gt;,
+     * &lt;code&gt;test&lt;/code&gt; and &lt;code&gt;runtime&lt;/code&gt;.
      *
      * @since 3.0.0
      */
-<span class="nc" id="L145">    @Parameter(defaultValue = &quot;test&quot;, property = &quot;scope&quot;)</span>
+<span class="nc" id="L146">    @Parameter(defaultValue = &quot;test&quot;, property = &quot;scope&quot;)</span>
     public String scope = JavaScopes.TEST;
 
     /**
@@ -151,7 +152,7 @@ import static com.google.common.base.Preconditions.checkState;
      *
      * @since 3.0.0
      */
-<span class="nc" id="L154">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.deep-scan&quot;)</span>
+<span class="nc" id="L155">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.deep-scan&quot;)</span>
     public boolean deepScan = false;
 
     /**
@@ -159,7 +160,7 @@ import static com.google.common.base.Preconditions.checkState;
      *
      * @since 3.0.0
      */
-<span class="nc" id="L162">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.direct-only&quot;)</span>
+<span class="nc" id="L163">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.direct-only&quot;)</span>
     public boolean directOnly = false;
 
     /**
@@ -167,31 +168,31 @@ import static com.google.common.base.Preconditions.checkState;
      *
      * @since 3.0.0
      */
-<span class="nc" id="L170">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.managed-only&quot;)</span>
+<span class="nc" id="L171">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.managed-only&quot;)</span>
     public boolean managedOnly = false;
 
     /**
      * Run dependency resolution in parallel with multiple
-     * threads. Should only ever set to &lt;tt&gt;false&lt;/tt&gt; if the plugin
+     * threads. Should only ever set to &lt;code&gt;false&lt;/code&gt; if the plugin
      * shows stability problems when resolving dependencies. Please &lt;a
      * href=&quot;issue-management.html&quot;&gt;file a bug&lt;/a&gt; in that case, too.
      *
      * @since 3.0.0
      */
-<span class="nc" id="L181">    @Parameter(defaultValue = &quot;true&quot;, property = &quot;dvc.fast-resolution&quot;)</span>
+<span class="nc" id="L182">    @Parameter(defaultValue = &quot;true&quot;, property = &quot;dvc.fast-resolution&quot;)</span>
     public boolean fastResolution = true;
 
     /**
-     * Fail the build if an artifact in &lt;tt&gt;system&lt;/tt&gt; scope can not be resolved. Those are notoriously dependent on
+     * Fail the build if an artifact in &lt;code&gt;system&lt;/code&gt; scope can not be resolved. Those are notoriously dependent on
      * the local build environment and some outright fail (e.g. referencing the &lt;code&gt;tools.jar&lt;/code&gt;, which no longer exists in a JDK8+ environment).
-     * &lt;br/&gt;
-     * Setting this flag to &lt;tt&gt;true&lt;/tt&gt; will fail the build if any &lt;tt&gt;system&lt;/tt&gt; scoped artifact
-     * can not be resolved. This is almost never desired, except when building a project with a direct &lt;tt&gt;system&lt;/tt&gt; scoped
+     * &lt;br&gt;
+     * Setting this flag to &lt;code&gt;true&lt;/code&gt; will fail the build if any &lt;code&gt;system&lt;/code&gt; scoped artifact
+     * can not be resolved. This is almost never desired, except when building a project with a direct &lt;code&gt;system&lt;/code&gt; scoped
      * dependency.
      *
      * @since 3.0.0
      */
-<span class="nc" id="L194">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.unresolved-system-artifacts-fail-build&quot;)</span>
+<span class="nc" id="L195">    @Parameter(defaultValue = &quot;false&quot;, property = &quot;dvc.unresolved-system-artifacts-fail-build&quot;)</span>
     protected boolean unresolvedSystemArtifactsFailBuild = false;
 
     /**
@@ -209,25 +210,25 @@ import static com.google.common.base.Preconditions.checkState;
      * &lt;/pre&gt;
      *
      * A resolver maps a specific strategy to a list of includes.
-     * The include syntax is &lt;tt&gt;[group-id]:[artifact-id]&lt;/tt&gt; where each pattern segment
-     * supports full and partial wildcards (&lt;tt&gt;*&lt;/tt&gt;).
-     * &lt;br/&gt;
-     * The plugin includes some default strategies: &lt;tt&gt;apr&lt;/tt&gt;, &lt;tt&gt;default&lt;/tt&gt;, &lt;tt&gt;single-digit&lt;/tt&gt; and &lt;tt&gt;two-digits-backward-compatible&lt;/tt&gt;.
+     * The include syntax is &lt;code&gt;[group-id]:[artifact-id]&lt;/code&gt; where each pattern segment
+     * supports full and partial wildcards (&lt;code&gt;*&lt;/code&gt;).
+     * &lt;br&gt;
+     * The plugin includes some default strategies: &lt;code&gt;apr&lt;/code&gt;, &lt;code&gt;default&lt;/code&gt;, &lt;code&gt;single-digit&lt;/code&gt; and &lt;code&gt;two-digits-backward-compatible&lt;/code&gt;.
      * Additional strategies can be defined and added to the plugin classpath.
      */
-<span class="nc" id="L218">    @Parameter</span>
+<span class="nc" id="L219">    @Parameter</span>
     public ResolverDefinition[] resolvers = new ResolverDefinition[0];
 
     /**
      * Sets the default strategy to use to evaluate whether two dependency versions are compatible or not.
      *
-     * The &lt;tt&gt;default&lt;/tt&gt; resolution strategy matches the Maven
+     * The &lt;code&gt;default&lt;/code&gt; resolution strategy matches the Maven
      * dependency resolution itself; any two dependencies that maven
      * considers compatible will be accepted.
      *
      * @since 3.0.0
      */
-<span class="nc" id="L230">    @Parameter(defaultValue = &quot;default&quot;, property = &quot;dvc.default-strategy&quot;)</span>
+<span class="nc" id="L231">    @Parameter(defaultValue = &quot;default&quot;, property = &quot;dvc.default-strategy&quot;)</span>
     public String defaultStrategy = &quot;default&quot;;
 
     protected StrategyCache strategyCache;
@@ -236,44 +237,44 @@ import static com.google.common.base.Preconditions.checkState;
             throws MojoExecutionException, MojoFailureException
     {
         try {
-<span class="nc bnc" id="L239" title="All 2 branches missed.">            for (VersionCheckExcludes exclusion : exclusions) {</span>
-<span class="nc" id="L240">                checkState(exclusion.isValid(), &quot;Invalid exclusion specification: '%s'&quot;, exclusion);</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">            for (VersionCheckExcludes exclusion : exclusions) {</span>
+<span class="nc" id="L241">                checkState(exclusion.isValid(), &quot;Invalid exclusion specification: '%s'&quot;, exclusion);</span>
             }
 
-<span class="nc bnc" id="L243" title="All 4 branches missed.">            checkState(!Strings.nullToEmpty(scope).trim().isEmpty() &amp;&amp; VALID_SCOPES.contains(scope), &quot;Scope '%s' is invalid&quot;, scope);</span>
+<span class="nc bnc" id="L244" title="All 4 branches missed.">            checkState(!Strings.nullToEmpty(scope).trim().isEmpty() &amp;&amp; VALID_SCOPES.contains(scope), &quot;Scope '%s' is invalid&quot;, scope);</span>
 
-<span class="nc bnc" id="L245" title="All 2 branches missed.">            if (skip) {</span>
-<span class="nc" id="L246">                LOG.report(quiet, &quot;Skipping plugin execution&quot;);</span>
-<span class="nc" id="L247">                return;</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">            if (skip) {</span>
+<span class="nc" id="L247">                LOG.report(quiet, &quot;Skipping plugin execution&quot;);</span>
+<span class="nc" id="L248">                return;</span>
             }
 
-<span class="nc bnc" id="L250" title="All 4 branches missed.">            if (!includePomProjects &amp;&amp; &quot;pom&quot;.equals(project.getPackaging())) {</span>
-<span class="nc" id="L251">                LOG.report(quiet, &quot;Ignoring POM project&quot;);</span>
-<span class="nc" id="L252">                return;</span>
+<span class="nc bnc" id="L251" title="All 4 branches missed.">            if (!includePomProjects &amp;&amp; &quot;pom&quot;.equals(project.getPackaging())) {</span>
+<span class="nc" id="L252">                LOG.report(quiet, &quot;Ignoring POM project&quot;);</span>
+<span class="nc" id="L253">                return;</span>
             }
 
-<span class="nc" id="L255">            LOG.debug(&quot;Starting %s mojo run!&quot;, this.getClass().getSimpleName());</span>
+<span class="nc" id="L256">            LOG.debug(&quot;Starting %s mojo run!&quot;, this.getClass().getSimpleName());</span>
 
-<span class="nc" id="L257">            this.strategyCache = new StrategyCache(strategyProvider, resolvers, defaultStrategy);</span>
+<span class="nc" id="L258">            this.strategyCache = new StrategyCache(strategyProvider, resolvers, defaultStrategy);</span>
 
-<span class="nc" id="L259">            final ScopeLimitingFilter scopeFilter = createScopeFilter();</span>
-<span class="nc" id="L260">            final DependencyMap rootDependencyMap = new DependencyMapBuilder(this).mapProject(project, scopeFilter);</span>
+<span class="nc" id="L260">            final ScopeLimitingFilter scopeFilter = createScopeFilter();</span>
+<span class="nc" id="L261">            final DependencyMap rootDependencyMap = new DependencyMapBuilder(this).mapProject(project, scopeFilter);</span>
 
-<span class="nc" id="L262">            try (DependencyTreeResolver dependencyTreeResolver = new DependencyTreeResolver(this, rootDependencyMap)) {</span>
-<span class="nc" id="L263">                final ImmutableSetMultimap&lt;QualifiedName, VersionResolutionCollection&gt; resolutionMap = dependencyTreeResolver.computeResolutionMap(project, scopeFilter);</span>
-<span class="nc" id="L264">                doExecute(resolutionMap, rootDependencyMap);</span>
+<span class="nc" id="L263">            try (DependencyTreeResolver dependencyTreeResolver = new DependencyTreeResolver(this, rootDependencyMap)) {</span>
+<span class="nc" id="L264">                final ImmutableSetMultimap&lt;QualifiedName, VersionResolutionCollection&gt; resolutionMap = dependencyTreeResolver.computeResolutionMap(project, scopeFilter);</span>
+<span class="nc" id="L265">                doExecute(resolutionMap, rootDependencyMap);</span>
             }
         }
-<span class="nc" id="L267">        catch (MojoExecutionException | MojoFailureException e) {</span>
-<span class="nc" id="L268">            throw e;</span>
+<span class="nc" id="L268">        catch (MojoExecutionException | MojoFailureException e) {</span>
+<span class="nc" id="L269">            throw e;</span>
         }
-<span class="nc" id="L270">        catch (Exception e) {</span>
-<span class="nc" id="L271">            throw new MojoExecutionException(&quot;While running mojo: &quot;, e);</span>
+<span class="nc" id="L271">        catch (Exception e) {</span>
+<span class="nc" id="L272">            throw new MojoExecutionException(&quot;While running mojo: &quot;, e);</span>
         }
         finally {
-<span class="nc" id="L274">            LOG.debug(&quot;Ended %s mojo run!&quot;, this.getClass().getSimpleName());</span>
+<span class="nc" id="L275">            LOG.debug(&quot;Ended %s mojo run!&quot;, this.getClass().getSimpleName());</span>
         }
-<span class="nc" id="L276">    }</span>
+<span class="nc" id="L277">    }</span>
 
     /**
      * Subclasses need to implement this method.
@@ -294,85 +295,85 @@ import static com.google.common.base.Preconditions.checkState;
      */
     protected ScopeLimitingFilter createScopeFilter()
     {
-<span class="nc" id="L297">        return ScopeLimitingFilter.computeDependencyScope(scope);</span>
+<span class="nc" id="L298">        return ScopeLimitingFilter.computeDependencyScope(scope);</span>
     }
 
     @Override
     public boolean useFastResolution()
     {
-<span class="nc" id="L303">        return fastResolution;</span>
+<span class="nc" id="L304">        return fastResolution;</span>
     }
 
     @Override
     public boolean useDeepScan()
     {
-<span class="nc" id="L309">        return deepScan;</span>
+<span class="nc" id="L310">        return deepScan;</span>
     }
 
     @Override
     public StrategyCache getStrategyCache()
     {
-<span class="nc" id="L315">        return strategyCache;</span>
+<span class="nc" id="L316">        return strategyCache;</span>
     }
 
     @Override
     public ProjectBuilder getProjectBuilder()
     {
-<span class="nc" id="L321">        return mavenProjectBuilder;</span>
+<span class="nc" id="L322">        return mavenProjectBuilder;</span>
     }
 
     @Override
     public ProjectDependenciesResolver getProjectDependenciesResolver()
     {
-<span class="nc" id="L327">        return projectDependenciesResolver;</span>
+<span class="nc" id="L328">        return projectDependenciesResolver;</span>
     }
 
     @Override
     public MavenProject getRootProject()
     {
-<span class="nc" id="L333">        return project;</span>
+<span class="nc" id="L334">        return project;</span>
     }
 
     @Override
     public List&lt;MavenProject&gt; getReactorProjects()
     {
-<span class="nc" id="L339">        return ImmutableList.copyOf(reactorProjects);</span>
+<span class="nc" id="L340">        return ImmutableList.copyOf(reactorProjects);</span>
     }
 
     @Override
     public RepositorySystemSession getRepositorySystemSession()
     {
-<span class="nc" id="L345">        return mavenSession.getRepositorySession();</span>
+<span class="nc" id="L346">        return mavenSession.getRepositorySession();</span>
     }
 
     @Override
-<span class="nc" id="L349">    public RepositorySystem getRepositorySystem() { return repositorySystem; }</span>
+<span class="nc" id="L350">    public RepositorySystem getRepositorySystem() { return repositorySystem; }</span>
 
     @Override
     public ProjectBuildingRequest createProjectBuildingRequest()
     {
-<span class="nc" id="L354">        DefaultProjectBuildingRequest buildingRequest = new DefaultProjectBuildingRequest(mavenSession.getProjectBuildingRequest());</span>
-<span class="nc" id="L355">        buildingRequest.setRemoteRepositories(project.getRemoteArtifactRepositories());</span>
-<span class="nc" id="L356">        return buildingRequest;</span>
+<span class="nc" id="L355">        DefaultProjectBuildingRequest buildingRequest = new DefaultProjectBuildingRequest(mavenSession.getProjectBuildingRequest());</span>
+<span class="nc" id="L356">        buildingRequest.setRemoteRepositories(project.getRemoteArtifactRepositories());</span>
+<span class="nc" id="L357">        return buildingRequest;</span>
     }
 
     @Override
     public VersionRangeRequest createVersionRangeRequest(Artifact artifact)
     {
-<span class="nc" id="L362">        checkNotNull(artifact, &quot;artifact is null&quot;);</span>
-<span class="nc" id="L363">        return new VersionRangeRequest(artifact, project.getRemoteProjectRepositories(), &quot;&quot;);</span>
+<span class="nc" id="L363">        checkNotNull(artifact, &quot;artifact is null&quot;);</span>
+<span class="nc" id="L364">        return new VersionRangeRequest(artifact, project.getRemoteProjectRepositories(), &quot;&quot;);</span>
     }
 
     @Override
     public List&lt;VersionCheckExcludes&gt; getExclusions()
     {
-<span class="nc" id="L369">        return Arrays.asList(exclusions);</span>
+<span class="nc" id="L370">        return Arrays.asList(exclusions);</span>
     }
 
     @Override
     public boolean isUnresolvedSystemArtifactsFailBuild()
     {
-<span class="nc" id="L375">        return unresolvedSystemArtifactsFailBuild;</span>
+<span class="nc" id="L376">        return unresolvedSystemArtifactsFailBuild;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>
