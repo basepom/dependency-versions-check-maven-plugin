@@ -89,13 +89,24 @@ public abstract class AbstractDependencyVersionsMojo
     public StrategyProvider strategyProvider;
 
     /**
-     * List of elements that will be removed from the version
-     * check. This allows potential conflicts to be excluded. Each
-     * element consists of a dependency pattern [groupId]:[artifactId]
-     * with supported wildcards and an expected version (which is the
-     * version in the dependency tree) and a resolved version (the
-     * version that is used after dependency resolution). Any match in
-     * this list will be excluded from the dependency version check.
+     * List of version checks that will be removed from the version
+     * check. This allows potential conflicts to be excluded.
+     * <br/>
+     * <pre>
+     * &lt;exclusions&gt;
+     *   &lt;exclusion&gt;
+     *     &lt;dependency&gt;...&lt;/dependency&gt;
+     *     &lt;expected&gt;...&lt;/expected&gt;
+     *     &lt;resolved&gt;...&lt;/resolved&gt;
+     *   &lt;/exclusion&gt;
+     * &lt;/exclusions&gt;
+     * </pre>
+     * <p>
+     * Each
+     * element consists of a dependency pattern <tt>[groupId]:[artifactId]</tt>
+     * that supports wildcards and an expected version (which is the
+     * version is expected by the artifact) and a resolved version (the
+     * version that the dependency resolution has chosen).
      */
     @Parameter(alias = "exceptions")
     public VersionCheckExcludes[] exclusions = new VersionCheckExcludes[0];
@@ -107,7 +118,9 @@ public abstract class AbstractDependencyVersionsMojo
     public boolean skip = false;
 
     /**
-     * Include POM projects when running on a multi-module project.
+     * Include POM projects when running on a multi-module project. Dependency
+     * resolution on a pom project almost never makes sense as it does not actually
+     * build any artifacts.
      *
      * @since 3.0.0
      */
@@ -123,7 +136,11 @@ public abstract class AbstractDependencyVersionsMojo
     public boolean quiet = false;
 
     /**
-     * The scope to list. Defaults to "compile". Valid values are "compile+runtime", "compile", "test" and "runtime".
+     * Dependency resolution scope. Defaults to <tt>test</tt>. Valid
+     * choices are <tt>compile+runtime</tt>, <tt>compile</tt>,
+     * <tt>test</tt> and <tt>runtime</tt>.
+     *
+     * @since 3.0.0
      */
     @Parameter(defaultValue = "test", property = "scope")
     public String scope = JavaScopes.TEST;
@@ -131,35 +148,45 @@ public abstract class AbstractDependencyVersionsMojo
     /**
      * Use deep scan or regular scan. Deep scan looks at all dependencies in the dependency tree, while
      * regular scan only looks one level deep into the direct dependencies.
+     *
+     * @since 3.0.0
      */
     @Parameter(defaultValue = "false", property = "dvc.deep-scan")
     public boolean deepScan = false;
 
     /**
-     * Whether to list only direct dependencies or all dependencies. Default is to list all dependencies.
+     * List only direct dependencies or all dependencies.
+     *
+     * @since 3.0.0
      */
     @Parameter(defaultValue = "false", property = "dvc.direct-only")
     public boolean directOnly = false;
 
     /**
-     * Whether to list all dependencies or only managed dependencies. Default is to list all dependencies.
+     * List only managed dependencies or all dependencies.
+     *
+     * @since 3.0.0
      */
     @Parameter(defaultValue = "false", property = "dvc.managed-only")
     public boolean managedOnly = false;
 
     /**
-     * Run dependency resolution with multiple threads. Should only ever set to false if
-     * the plugin shows stability problems when resolving dependencies. Please file a bug in that case, too.
+     * Run dependency resolution in parallel with multiple
+     * threads. Should only ever set to <tt>false</tt> if the plugin
+     * shows stability problems when resolving dependencies. Please <a
+     * href="issue-management.html">file a bug</a> in that case, too.
+     *
+     * @since 3.0.0
      */
     @Parameter(defaultValue = "true", property = "dvc.fast-resolution")
     public boolean fastResolution = true;
 
     /**
-     * Fail the build if an artifact in system scope can not be resolved. Those are notoriously dependent on
-     * the local build environment and some outright fail (e.g. referencing the tools.jar in a JDK8+ environment).
-     * <p>
-     * Setting this flag to true will fail the build if any system artifact in the transitive set of dependencies
-     * can not be resolved. This is almost never what is wanted, except when building a project with a direct system
+     * Fail the build if an artifact in <tt>system</tt> scope can not be resolved. Those are notoriously dependent on
+     * the local build environment and some outright fail (e.g. referencing the <code>tools.jar</code>, which no longer exists in a JDK8+ environment).
+     * <br/>
+     * Setting this flag to <tt>true</tt> will fail the build if any <tt>system</tt> scoped artifact
+     * can not be resolved. This is almost never desired, except when building a project with a direct <tt>system</tt> scoped
      * dependency.
      *
      * @since 3.0.0
@@ -168,20 +195,35 @@ public abstract class AbstractDependencyVersionsMojo
     protected boolean unresolvedSystemArtifactsFailBuild = false;
 
     /**
-     * List of resolvers to apply specific strategies to dependencies. A resolver contains of a strategy name
-     * and a list of includes. The include syntax is [group-id]:[artifact-id] where each pattern segment
-     * supports full and partial wildcards ("*").
-     * <p>
-     * The plugin includes some default strategies: apr, default, single-digit and two-digits-backward-compatible.
-     * Additional strategies can be defined in code and added to the plugin classpath.
+     * List of resolvers to apply specific strategies to dependencies.
+     *
+     * <pre>
+     * &lt;resolvers&gt;
+     *   &lt;resolver&gt;
+     *     &lt;strategy&gt;...&lt;strategy&gt;
+     *     &lt;includes&gt;
+     *       &lt;include&gt;...&lt;include&gt;
+     *     &lt;includes&gt;
+     *   &lt;resolver&gt;
+     * &lt;resolvers&gt;
+     * </pre>
+     *
+     * A resolver maps a specific strategy to a list of includes.
+     * The include syntax is <tt>[group-id]:[artifact-id]</tt> where each pattern segment
+     * supports full and partial wildcards (<tt>*</tt>).
+     * <br/>
+     * The plugin includes some default strategies: <tt>apr</tt>, <tt>default</tt>, <tt>single-digit</tt> and <tt>two-digits-backward-compatible</tt>.
+     * Additional strategies can be defined and added to the plugin classpath.
      */
     @Parameter
     public ResolverDefinition[] resolvers = new ResolverDefinition[0];
 
     /**
      * Sets the default strategy to use to evaluate whether two dependency versions are compatible or not.
-     * The default strategy matches the Maven dependency resolution itself; any two dependencies that maven considers
-     * compatible will be accepted by the default strategy.
+     *
+     * The <tt>default</tt> resolution strategy matches the Maven
+     * dependency resolution itself; any two dependencies that maven
+     * considers compatible will be accepted.
      */
     @Parameter(defaultValue = "default", property = "dependency-versions-check.default")
     public String defaultStrategy = "default";

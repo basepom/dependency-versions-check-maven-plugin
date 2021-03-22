@@ -49,21 +49,14 @@ public final class DependencyVersionsListMojo
         extends AbstractDependencyVersionsMojo
 {
     /**
-     * Whether to list all dependencies or only dependencies in conflict. Default is to list all dependencies.
+     * List only dependencies in conflict or all dependencies.
      */
-    @Parameter(defaultValue = "false", property = "dvc.conflict-only")
-    public boolean conflictOnly = false;
+    @Parameter(defaultValue = "false", property = "dvc.conflicts-only")
+    public boolean conflictsOnly = false;
 
     @Override
     protected void doExecute(final ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> resolutionMap, final DependencyMap rootDependencyMap)
             throws Exception
-    {
-        final ImmutableMap<QualifiedName, DependencyNode> rootDependencies = rootDependencyMap.getAllDependencies();
-        createLog(resolutionMap, rootDependencies);
-    }
-
-    private void createLog(final ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> resolutionMap,
-            final ImmutableMap<QualifiedName, DependencyNode> rootDependencies)
     {
         final ImmutableMap<QualifiedName, Collection<VersionResolutionCollection>> filteredMap = ImmutableMap.copyOf(Maps.filterValues(
                 resolutionMap.asMap(),
@@ -71,7 +64,7 @@ public final class DependencyVersionsListMojo
                     // report if no condition is set.
                     boolean report = true;
 
-                    if (conflictOnly) {
+                    if (conflictsOnly) {
                         // do not report if conflicts are requested but none exists
                         report &= v.stream().anyMatch(VersionResolutionCollection::hasConflict);
                     }
@@ -87,18 +80,25 @@ public final class DependencyVersionsListMojo
                     return report;
                 }));
 
+        LOG.report(quiet, "%s%s dependencies%s for '%s' scope%s:",
+                (directOnly ? "Direct" : "All"),
+                (managedOnly ? " managed" : ""),
+                (deepScan ? " using deep scan" : ""),
+                scope,
+                (conflictsOnly ? ", reporting only conflicts" : ""));
+
+        if (filteredMap.isEmpty()) {
+            return;
+        }
+
+        final ImmutableMap<QualifiedName, DependencyNode> rootDependencies = rootDependencyMap.getAllDependencies();
+
         // calculate padding for columnar output
         final int namePadding = filteredMap.keySet().stream()
                 .map(QualifiedName::length).reduce(0, Math::max);
         final int scopePadding = rootDependencies.entrySet().stream()
                 .filter(e -> filteredMap.containsKey(e.getKey()))
                 .map(e -> e.getValue().getDependency().getScope().length()).reduce(0, Math::max);
-
-        if (filteredMap.isEmpty()) {
-            return;
-        }
-
-        LOG.info("%s dependencies for '%s' scope:", (directOnly ? "Direct" : "All"), scope);
 
         for (final Map.Entry<QualifiedName, Collection<VersionResolutionCollection>> entry : filteredMap.entrySet()) {
             final QualifiedName dependencyName = entry.getKey();

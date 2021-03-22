@@ -29,30 +29,30 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class VersionCheckExcludes
 {
     private String dependency = "";
-    private ComparableVersion expectedVersion;
-    private ComparableVersion resolvedVersion;
+    private ComparableVersion expected;
+    private ComparableVersion resolved;
 
     public void setDependency(final String dependency)
     {
         this.dependency = checkNotNull(dependency, "dependency is null").trim();
     }
 
-    public void setExpectedVersion(final String version)
+    public void setExpected(final String version)
     {
         checkNotNull(version, "version is null");
-        this.expectedVersion = new ComparableVersion(version);
+        this.expected = new ComparableVersion(version);
     }
 
-    public void setResolvedVersion(final String version)
+    public void setResolved(final String version)
     {
         checkNotNull(version, "version is null");
-        this.resolvedVersion = new ComparableVersion(version);
+        this.resolved = new ComparableVersion(version);
     }
 
     public boolean isValid()
     {
-        return (expectedVersion != null)
-                && (resolvedVersion != null);
+        return (expected != null)
+                && (resolved != null);
     }
 
     public boolean matches(final DependencyNode dependencyNode, final ComparableVersion expectedVersion, final ComparableVersion resolvedVersion)
@@ -65,8 +65,8 @@ public class VersionCheckExcludes
         final QualifiedName artifactName = QualifiedName.fromDependencyNode(dependencyNode);
 
         return matcher.matches(artifactName)
-                && this.expectedVersion.equals(expectedVersion)
-                && this.resolvedVersion.equals(resolvedVersion);
+                && this.expected.equals(expectedVersion)
+                && this.resolved.equals(resolvedVersion);
     }
 
     @Override
@@ -74,8 +74,8 @@ public class VersionCheckExcludes
     {
         return MoreObjects.toStringHelper(this)
                 .add("dependency", dependency)
-                .add("expectedVersion", expectedVersion)
-                .add("resolvedVersion", resolvedVersion)
+                .add("expected", expected)
+                .add("resolved", resolved)
                 .toString();
     }
 
@@ -90,13 +90,13 @@ public class VersionCheckExcludes
         }
         VersionCheckExcludes that = (VersionCheckExcludes) o;
         return Objects.equals(dependency, that.dependency) &&
-                Objects.equals(expectedVersion, that.expectedVersion) &&
-                Objects.equals(resolvedVersion, that.resolvedVersion);
+                Objects.equals(expected, that.expected) &&
+                Objects.equals(resolved, that.resolved);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(dependency, expectedVersion, resolvedVersion);
+        return Objects.hash(dependency, expected, resolved);
     }
 }

@@ -23,8 +23,8 @@
 
     <groupId>org.basepom.maven</groupId>
     <artifactId>dependency-versions-check-maven-plugin</artifactId>
-    <packaging>maven-plugin</packaging>
     <version>3.0.1-SNAPSHOT</version>
+    <packaging>maven-plugin</packaging>
 
     <description>
         The dependency-versions-check plugin verifies that all resolved
@@ -50,12 +50,10 @@
         </license>
     </licenses>
 
-    <scm>
-        <connection>scm:git:git://github.com/basepom/dependency-versions-check-maven-plugin.git</connection>
-        <developerConnection>scm:git:git://github.com/basepom/dependency-versions-check-maven-plugin.git</developerConnection>
-        <url>https://github.com/basepom/dependency-versions-maven-check-plugin</url>
-        <tag>HEAD</tag>
-    </scm>
+    <organization>
+        <name>The basepom project</name>
+        <url>https://github.com/basepom</url>
+    </organization>
 
     <developers>
         <developer>
@@ -69,6 +67,13 @@
             <name>Henning Schmiedehausen</name>
         </developer>
     </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/basepom/dependency-versions-check-maven-plugin.git</connection>
+        <developerConnection>scm:git:git://github.com/basepom/dependency-versions-check-maven-plugin.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/basepom/dependency-versions-check-maven-plugin</url>
+    </scm>
 
     <issueManagement>
         <system>Github</system>
@@ -94,6 +99,11 @@
                 <groupId>com.google.errorprone</groupId>
                 <artifactId>error_prone_annotations</artifactId>
                 <version>2.4.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.sonatype.plexus</groupId>
+                <artifactId>plexus-cipher</artifactId>
+                <version>1.7</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -313,21 +323,21 @@
                         <groupId>${project.groupId}</groupId>
                         <artifactId>${project.artifactId}</artifactId>
                         <version>${project.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                    <goal>list</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                         <configuration>
                             <transitiveConflictFailsBuild>false</transitiveConflictFailsBuild>
                             <directConflictFailsBuild>true</directConflictFailsBuild>
                             <fastResolution>false</fastResolution>
                             <conflictOnly>false</conflictOnly>
                         </configuration>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>check</goal>
-                                    <goal>list</goal>
-                                </goals>
-                                <phase>validate</phase>
-                            </execution>
-                        </executions>
                     </plugin>
                 </plugins>
             </build>

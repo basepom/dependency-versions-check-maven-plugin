@@ -50,43 +50,33 @@ public class DependencyVersionsCheckMojo
         extends AbstractDependencyVersionsMojo
 {
     /**
-     * Whether to list all dependencies or only dependencies in conflict. Default is to list all dependencies.
-     */
-    @Parameter(defaultValue = "true", property = "dvc.conflict-only")
-    public boolean conflictOnly = true;
-
-    /**
-     * Whether the mojo should fail the build if a conflict was found. Any conflict (direct and transitive) will cause a failure.
-     * This is equivalent to setting both "directConflictFailsBuild" and "transitiveConflictFailsBuild".
-     *
-     * @deprecated Use "directConflictFailsBuild" and "transitiveConflictFailsBuild" instead. This will be removed in version 4.0.0 of the plugin.
-     */
-    @Deprecated
-    @Parameter(defaultValue = "false", alias = "failBuildInCaseOfConflict", property = "dvc.conflict-fails-build")
-    protected boolean conflictFailsBuild = false;
-
-    /**
-     * Fail the build if a version conflict involves one or more direct dependencies. As these versions are controlled by the
-     * project itself, it is strongly recommended to review and fix these conflicts.
+     * List only dependencies in conflict or all dependencies.
      *
      * @since 3.0.0
      */
-    @Parameter(defaultValue = "false", property = "dvc.direct-conflict-fails-build")
-    protected boolean directConflictFailsBuild = false;
+    @Parameter(defaultValue = "true", property = "dvc.conflicts-only")
+    public boolean conflictsOnly = true;
 
     /**
-     * Fail the build even if a version conflict happens between transitive dependencies only. While such conflicts can be resolved by adding
-     * a &lt;dependencyManagement&gt; section to the project POM, they are often outside the control of a project and cause the POM to be cluttered
-     * with dependency versions that are not actually used directly in a project.
+     * Fail the build if a conflict is detected. Any conflict (direct and transitive) will cause a failure.
      */
-    @Parameter(defaultValue = "false", property = "dvc.transitive-conflict-fails-build")
-    protected boolean transitiveConflictFailsBuild = false;
+    @Parameter(defaultValue = "false", alias = "failBuildInCaseOfConflict", property = "dvc.conflicts-fail-build")
+    protected boolean conflictsFailBuild = false;
+
+    /**
+     * Fail the build only if a version conflict involves one or more direct dependencies. Direct dependency versions are controlled
+     * by the project itself so any conflict here can be fixed by changing the version in the project.
+     * <br/>
+     * It is strongly recommended to review and fix these conflicts.
+     *
+     * @since 3.0.0
+     */
+    @Parameter(defaultValue = "false", property = "dvc.direct-conflicts-fail-build")
+    protected boolean directConflictsFailBuild = false;
 
     protected void doExecute(final ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> resolutionMap, final DependencyMap rootDependencyMap)
             throws Exception
     {
-        final ImmutableMap<QualifiedName, DependencyNode> rootDependencies = rootDependencyMap.getAllDependencies();
-
         // filter out what to display.
         final ImmutableMap<QualifiedName, Collection<VersionResolutionCollection>> filteredMap = ImmutableMap.copyOf(Maps.filterValues(
                 resolutionMap.asMap(),
@@ -94,7 +84,7 @@ public class DependencyVersionsCheckMojo
                     // report if no condition is set.
                     boolean report = true;
 
-                    if (conflictOnly) {
+                    if (conflictsOnly) {
                         // do not report if conflicts are requested but none exists
                         report &= v.stream().anyMatch(VersionResolutionCollection::hasConflict);
                     }
@@ -110,18 +100,21 @@ public class DependencyVersionsCheckMojo
                     return report;
                 }));
 
-        boolean directConflicts = false;
-        boolean transitiveConflicts = false;
+        LOG.report(quiet, "Checking %s%s dependencies%s for '%s' scope%s",
+                (directOnly ? "direct" : "all"),
+                (managedOnly ? ", managed" : ""),
+                (deepScan ? " using deep scan" : ""),
+                scope,
+                (conflictsOnly ? ", reporting only conflicts" : ""));
 
         if (filteredMap.isEmpty()) {
             return;
         }
 
-        LOG.info("Checking %s%s dependencies for '%s' scope%s",
-                (directOnly ? "direct" : "all"),
-                (managedOnly ? ", managed" : ""),
-                scope,
-                (conflictOnly ? ", reporting only conflicts" : ""));
+        final ImmutableMap<QualifiedName, DependencyNode> rootDependencies = rootDependencyMap.getAllDependencies();
+
+        boolean directConflicts = false;
+        boolean transitiveConflicts = false;
 
         for (final Map.Entry<QualifiedName, Collection<VersionResolutionCollection>> entry : filteredMap.entrySet()) {
             final ImmutableSetMultimap<ComparableVersion, VersionResolutionCollection> versionMap = entry.getValue().stream()
@@ -194,7 +187,8 @@ public class DependencyVersionsCheckMojo
 
                 if (hasConflictVersion) {
                     willWarn = true;
-                    willFail |= (isDirect ? directConflictFailsBuild : transitiveConflictFailsBuild) || conflictFailsBuild;
+                    willFail |= conflictsFailBuild; // any conflict fails build.
+                    willFail |= isDirect && directConflictsFailBuild;
 
                     directConflicts |= isDirect;       // any direct dependency in conflict
                     transitiveConflicts |= !isDirect;  // any transitive dependency in conflict
@@ -212,11 +206,11 @@ public class DependencyVersionsCheckMojo
             }
         }
 
-        if (directConflicts && (conflictFailsBuild || directConflictFailsBuild)) {
+        if (directConflicts && (conflictsFailBuild || directConflictsFailBuild)) {
             throw new MojoFailureException("Version conflict in direct dependencies detected!");
         }
 
-        if (transitiveConflicts && (conflictFailsBuild || transitiveConflictFailsBuild)) {
+        if (transitiveConflicts && conflictsFailBuild) {
             throw new MojoFailureException("Version conflict in transitive dependencies detected!");
         }
     }
