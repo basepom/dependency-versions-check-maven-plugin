@@ -59,6 +59,8 @@ public class DependencyVersionsCheckMojo
 
     /**
      * Fail the build if a conflict is detected. Any conflict (direct and transitive) will cause a failure.
+     *
+     * @since 3.0.0
      */
     @Parameter(defaultValue = "false", alias = "failBuildInCaseOfConflict", property = "dvc.conflicts-fail-build")
     protected boolean conflictsFailBuild = false;

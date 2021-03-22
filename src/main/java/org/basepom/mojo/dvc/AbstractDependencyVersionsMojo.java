@@ -124,7 +124,7 @@ public abstract class AbstractDependencyVersionsMojo
      *
      * @since 3.0.0
      */
-    @Parameter(defaultValue = "false", property = "dvc.includePomProjects")
+    @Parameter(defaultValue = "false", property = "dvc.include-pom-projects")
     public boolean includePomProjects = false;
 
     /**
@@ -224,8 +224,10 @@ public abstract class AbstractDependencyVersionsMojo
      * The <tt>default</tt> resolution strategy matches the Maven
      * dependency resolution itself; any two dependencies that maven
      * considers compatible will be accepted.
+     *
+     * @since 3.0.0
      */
-    @Parameter(defaultValue = "default", property = "dependency-versions-check.default")
+    @Parameter(defaultValue = "default", property = "dvc.default-strategy")
     public String defaultStrategy = "default";
 
     protected StrategyCache strategyCache;
