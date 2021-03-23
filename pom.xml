@@ -85,7 +85,9 @@
         <project.build.systemJdk>11</project.build.systemJdk>
         <project.build.targetJdk>8</project.build.targetJdk>
 
-         <maven.site.deploy.skip>true</maven.site.deploy.skip>
+        <maven.site.deploy.skip>true</maven.site.deploy.skip>
+        <!-- site requires full javadoc generation -->
+        <basepom.javadoc.skip>false</basepom.javadoc.skip>
 
         <dep.maven-api.version>3.6.3</dep.maven-api.version>
         <dep.maven-resolver.version>1.4.2</dep.maven-resolver.version>
@@ -94,6 +96,8 @@
         <dep.slf4j.version>1.7.30</dep.slf4j.version>
         <dep.guava.version>29.0-jre</dep.guava.version>
         <dep.junit5.version>5.7.0</dep.junit5.version>
+
+        <dep.plugin.jxr.version>3.0.0</dep.plugin.jxr.version>
     </properties>
 
     <dependencyManagement>
@@ -386,6 +390,18 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <additionalJOption>--no-module-directories</additionalJOption>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jxr-plugin</artifactId>
+                <version>${dep.plugin.jxr.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
