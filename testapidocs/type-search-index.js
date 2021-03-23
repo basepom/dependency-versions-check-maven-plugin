@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"org.basepom.mojo.dvc","l":"QualifiedNameMatcherTest"},{"p":"org.basepom.mojo.dvc","l":"QualifiedNameTest"}]

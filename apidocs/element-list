@@ -1,0 +1,6 @@
+org.basepom.mojo.dvc
+org.basepom.mojo.dvc.dependency
+org.basepom.mojo.dvc.model
+org.basepom.mojo.dvc.mojo
+org.basepom.mojo.dvc.strategy
+org.basepom.mojo.dvc.version

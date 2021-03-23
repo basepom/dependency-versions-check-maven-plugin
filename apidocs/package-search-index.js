@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"org.basepom.mojo.dvc"},{"l":"org.basepom.mojo.dvc.dependency"},{"l":"org.basepom.mojo.dvc.model"},{"l":"org.basepom.mojo.dvc.mojo"},{"l":"org.basepom.mojo.dvc.strategy"},{"l":"org.basepom.mojo.dvc.version"}]
