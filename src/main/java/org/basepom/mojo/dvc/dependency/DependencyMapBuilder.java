@@ -18,7 +18,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.apache.maven.RepositoryUtils;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.DefaultDependencyResolutionRequest;
 import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.DependencyResolutionRequest;
@@ -65,12 +64,12 @@ public final class DependencyMapBuilder
      * @param projectScopeFilter A scope limiting filter to mask out dependencies out of scope.
      * @return A map of dependencies for this given dependency node.
      *
-     * @throws MojoExecutionException Dependency resolution failed.
+     * @throws DependencyResolutionException Dependency resolution failed.
      * @throws ProjectBuildingException Maven project could not be built.
      */
     public DependencyMap mapDependency(final DependencyNode dependencyNode,
             final DependencyFilter projectScopeFilter)
-            throws MojoExecutionException, ProjectBuildingException
+            throws DependencyResolutionException, ProjectBuildingException
     {
         checkNotNull(dependencyNode, "dependencyNode is null");
         checkNotNull(projectScopeFilter, "projectScopeFilter is null");
@@ -91,11 +90,11 @@ public final class DependencyMapBuilder
      *
      * @return A map of dependencies for this given dependency node.
      *
-     * @throws MojoExecutionException Dependency resolution failed.
+     * @throws DependencyResolutionException Dependency resolution failed.
      */
     public DependencyMap mapProject(final MavenProject project,
             final DependencyFilter scopeFilter)
-            throws MojoExecutionException
+            throws DependencyResolutionException
     {
         checkNotNull(project, "project is null");
         checkNotNull(scopeFilter, "scopeFilter is null");
@@ -157,7 +156,7 @@ public final class DependencyMapBuilder
                     LOG.warn("Could not access a legacy repository for artifacts:  %s; Reason: %s", result.getUnresolvedDependencies(), t.getMessage());
                 }
                 else {
-                    throw new MojoExecutionException("Could not resolve the following dependencies: " + result.getUnresolvedDependencies(), e);
+                    throw e;
                 }
             }
         }

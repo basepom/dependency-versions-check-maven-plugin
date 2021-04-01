@@ -13,6 +13,7 @@
  */
 package org.basepom.mojo.dvc.dependency;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -25,6 +26,7 @@ import org.apache.maven.artifact.resolver.AbstractArtifactResolutionException;
 import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.apache.maven.artifact.versioning.OverConstrainedVersionException;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingException;
 import org.basepom.mojo.dvc.CheckExclusionsFilter;
@@ -48,6 +50,7 @@ import org.eclipse.aether.util.filter.AndDependencyFilter;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -121,42 +124,77 @@ public final class DependencyTreeResolver
             dependencies = ImmutableList.copyOf(project.getDependencies().stream().map(d -> RepositoryUtils.toDependency(d, stereotypes)).collect(toImmutableList()));
         }
 
-        for (final Dependency dependency : dependencies) {
-            if (useParallelDependencyResolution) {
+        final ImmutableSet.Builder<Throwable> throwableBuilder = ImmutableSet.builder();
+
+        if (useParallelDependencyResolution) {
+            for (final Dependency dependency : dependencies) {
                 futureBuilder.add(executorService.submit((Callable<Void>) () -> {
                     resolveProjectDependency(dependency, scopeFilter, collector);
                     return null;
                 }));
             }
-            else {
-                resolveProjectDependency(dependency, scopeFilter, collector);
-            }
-        }
 
-        if (useParallelDependencyResolution) {
             final ImmutableList<ListenableFuture<?>> futures = futureBuilder.build();
-            Throwable failed = null;
-            boolean interrupted = false;
-            for (ListenableFuture<?> future : futures) {
+
+            for (final ListenableFuture<?> future : futures) {
                 try {
                     future.get();
                 }
                 catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    interrupted = true;
                 }
                 catch (ExecutionException e) {
-                    if (failed == null) {
-                        failed = e.getCause();
-                    }
+                    throwableBuilder.add(e.getCause());
                 }
             }
-            if (failed != null) {
-                throw new MojoExecutionException("While resolving dependencies:", failed);
+        }
+        else {
+            for (final Dependency dependency : dependencies) {
+                try {
+                    resolveProjectDependency(dependency, scopeFilter, collector);
+                }
+                catch (Throwable t) {
+                    throwableBuilder.add(t);
+                }
             }
         }
 
+        final Set<Throwable> throwables = throwableBuilder.build();
+        if (!throwables.isEmpty()) {
+            throw processResolveProjectDependencyException(throwableBuilder.build());
+        }
+
         return VersionResolutionCollection.toResolutionMap(collector.build());
+    }
+
+    private static MojoExecutionException processResolveProjectDependencyException(Set<Throwable> throwables)
+    {
+        ImmutableSet.Builder<String> failedDependenciesBuilder = ImmutableSet.builder();
+        ImmutableSet.Builder<String> messageBuilder = ImmutableSet.builder();
+        for (Throwable t : throwables) {
+            if (t instanceof DependencyResolutionException) {
+                ((DependencyResolutionException) t).getResult().getUnresolvedDependencies()
+                        .forEach(d -> failedDependenciesBuilder.add(printDependency(d)));
+            }
+            else {
+                messageBuilder.add(t.getMessage());
+            }
+        }
+
+        String message = Joiner.on("    \n").join(messageBuilder.build());
+        Set<String> failedDependencies = failedDependenciesBuilder.build();
+        if (!failedDependencies.isEmpty()) {
+            if (!message.isEmpty()) {
+                message += "\n";
+            }
+            message += "Could not resolve dependencies: [" + Joiner.on(", ").join(failedDependencies) + "]";
+        }
+        return new MojoExecutionException(message);
+    }
+
+    private static String printDependency(Dependency d)
+    {
+        return d.getArtifact() + " [" + d.getScope() + (d.isOptional() ? ", optional" : "") + "]";
     }
 
     /**
@@ -166,7 +204,7 @@ public final class DependencyTreeResolver
     private void resolveProjectDependency(final Dependency dependency,
             final ScopeLimitingFilter visibleScopes,
             final ImmutableSetMultimap.Builder<QualifiedName, VersionResolution> collector)
-            throws MojoExecutionException, AbstractArtifactResolutionException, VersionRangeResolutionException
+            throws MojoExecutionException, DependencyResolutionException, AbstractArtifactResolutionException, VersionRangeResolutionException
     {
         final QualifiedName dependencyName = QualifiedName.fromDependency(dependency);
 
@@ -273,7 +311,7 @@ public final class DependencyTreeResolver
             final Dependency requestingDependency,
             final DependencyNode dependencyNodeForDependency,
             final DependencyFilter scopeFilter)
-            throws AbstractArtifactResolutionException, ProjectBuildingException, MojoExecutionException
+            throws AbstractArtifactResolutionException, ProjectBuildingException, DependencyResolutionException
     {
         final AndDependencyFilter filter = new AndDependencyFilter(scopeFilter, new CheckExclusionsFilter(requestingDependency.getExclusions()));
 
