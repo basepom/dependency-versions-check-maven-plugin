@@ -139,9 +139,6 @@ public final class DependencyTreeResolver
             boolean interrupted = false;
             for (ListenableFuture<?> future : futures) {
                 try {
-                    if (interrupted || failed != null) {
-                        future.cancel(true);
-                    }
                     future.get();
                 }
                 catch (InterruptedException e) {
