@@ -26,6 +26,7 @@ The `list` goal is usually run interactively while the `check` goal should be ru
     <directOnly>...</directOnly>
     <managedOnly>...</managedOnly>
     <fastResolution>...</fastResolution>
+    <optionalDependenciesMustExist>...</optionalDependenciesMustExist>
     <unresolvedSystemArtifactsFailBuild>...</unresolvedSystemArtifactsFailBuild>
     <defaultStrategy>...</defaultStrategy>
     <conflictsOnly>...</conflictsOnly>
@@ -67,6 +68,7 @@ configuration key  | function | type | command line | default
 `directOnly` [*L*, *C*] | check only direct dependencies | boolean | `dvc.direct-only` | `false`
 `managedOnly` [*L*, *C*] | check only managed dependencies | boolean | `dvc.managed-only` | `false`
 `fastResolution` [*L*, *C*] | use parallel dependency resolution | boolean | `dvc.fast-resolution` | `true`
+`optionalDependenciesMustExist` [*L*, *C* ] | even optional dependencies must be resolvable | boolean | `dvc.dvc.optional-dependencies-must-exist` | `false`
 `unresolvedSystemArtifactsFailBuild` [*L*, *C*] | `system` scope artifacts that can not be resolved will fail the build | boolean |  `dvc.unresolved-system-artifacts-fail-build` | `false`
 `defaultStrategy` [*L*, *C*] | default artifact matching strategy | string | `dvc.default-strategy` | `default`
 `conflictsOnly` [*L*, *C*] | only report dependencies in conflict | boolean |  `dvc.conflicts-only` | `true` for `check` goal, `false` for `list` goal

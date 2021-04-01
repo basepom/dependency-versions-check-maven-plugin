@@ -133,6 +133,15 @@ public final class DependencyMapBuilder
                 result.getResolvedDependencies().addAll(systemDependencies);
             }
 
+            if (!context.isOptionalDependenciesMustExist()) {
+                final ImmutableSet<Dependency> optionalDependencies = result.getUnresolvedDependencies().stream()
+                        .filter(Dependency::isOptional)
+                        .collect(toImmutableSet());
+
+                result.getUnresolvedDependencies().removeAll(optionalDependencies);
+                result.getResolvedDependencies().addAll(optionalDependencies);
+            }
+
             if (!result.getUnresolvedDependencies().isEmpty()) {
                 final Throwable t = Throwables.getRootCause(e);
                 RemoteRepository repository = null;

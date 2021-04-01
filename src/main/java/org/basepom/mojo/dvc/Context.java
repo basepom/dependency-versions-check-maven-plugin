@@ -43,6 +43,11 @@ public interface Context
     boolean useDeepScan();
 
     /**
+     * @return True if all optional dependencies must exist.
+     */
+    boolean isOptionalDependenciesMustExist();
+
+    /**
      * @return All configured exclusions.
      */
     List<VersionCheckExcludes> getExclusions();

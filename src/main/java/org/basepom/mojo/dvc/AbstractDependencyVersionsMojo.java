@@ -17,7 +17,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import org.apache.maven.RepositoryUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -196,6 +195,17 @@ public abstract class AbstractDependencyVersionsMojo
     protected boolean unresolvedSystemArtifactsFailBuild = false;
 
     /**
+     * Require all optional dependencies to exist and fail the build if any optional dependency can not resolved. This is almost never
+     * needed and actually causes problems for some projects that use large public dependencies from central that in turn pull in
+     * non-public dependencies as optional.
+     *
+     * @since 3.2.0
+     */
+    @Parameter(defaultValue = "false", property = "dvc.optional-dependencies-must-exist")
+    protected boolean optionalDependenciesMustExist = false;
+
+
+    /**
      * List of resolvers to apply specific strategies to dependencies.
      *
      * <pre>
@@ -308,6 +318,12 @@ public abstract class AbstractDependencyVersionsMojo
     public boolean useDeepScan()
     {
         return deepScan;
+    }
+
+    @Override
+    public boolean isOptionalDependenciesMustExist()
+    {
+        return optionalDependenciesMustExist;
     }
 
     @Override
