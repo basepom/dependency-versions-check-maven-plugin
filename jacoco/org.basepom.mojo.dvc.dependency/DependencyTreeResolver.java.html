@@ -13,6 +13,7 @@
  */
 package org.basepom.mojo.dvc.dependency;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -25,6 +26,7 @@ import org.apache.maven.artifact.resolver.AbstractArtifactResolutionException;
 import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.apache.maven.artifact.versioning.OverConstrainedVersionException;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingException;
 import org.basepom.mojo.dvc.CheckExclusionsFilter;
@@ -48,6 +50,7 @@ import org.eclipse.aether.util.filter.AndDependencyFilter;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -62,27 +65,27 @@ import static org.basepom.mojo.dvc.dependency.DependencyMapBuilder.convertToPomA
 public final class DependencyTreeResolver
         implements AutoCloseable
 {
-<span class="nc" id="L65">    private static final PluginLog LOG = new PluginLog(DependencyTreeResolver.class);</span>
+<span class="nc" id="L68">    private static final PluginLog LOG = new PluginLog(DependencyTreeResolver.class);</span>
 
-<span class="nc" id="L67">    private static final int DEPENDENCY_RESOLUTION_NUM_THREADS = Runtime.getRuntime().availableProcessors() * 5;</span>
+<span class="nc" id="L70">    private static final int DEPENDENCY_RESOLUTION_NUM_THREADS = Runtime.getRuntime().availableProcessors() * 5;</span>
 
     private final Context context;
     private final DependencyMap rootDependencyMap;
 
-<span class="nc" id="L72">    private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(DEPENDENCY_RESOLUTION_NUM_THREADS,</span>
-<span class="nc" id="L73">            new ThreadFactoryBuilder().setNameFormat(&quot;dependency-version-check-worker-%s&quot;).setDaemon(true).build()));</span>
+<span class="nc" id="L75">    private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(DEPENDENCY_RESOLUTION_NUM_THREADS,</span>
+<span class="nc" id="L76">            new ThreadFactoryBuilder().setNameFormat(&quot;dependency-version-check-worker-%s&quot;).setDaemon(true).build()));</span>
 
     public DependencyTreeResolver(final Context context, final DependencyMap rootDependencyMap)
-<span class="nc" id="L76">    {</span>
-<span class="nc" id="L77">        this.context = checkNotNull(context, &quot;context is null&quot;);</span>
-<span class="nc" id="L78">        this.rootDependencyMap = checkNotNull(rootDependencyMap, &quot;rootDependencyMap is null&quot;);</span>
-<span class="nc" id="L79">    }</span>
+<span class="nc" id="L79">    {</span>
+<span class="nc" id="L80">        this.context = checkNotNull(context, &quot;context is null&quot;);</span>
+<span class="nc" id="L81">        this.rootDependencyMap = checkNotNull(rootDependencyMap, &quot;rootDependencyMap is null&quot;);</span>
+<span class="nc" id="L82">    }</span>
 
     @Override
     public void close()
     {
-<span class="nc" id="L84">        MoreExecutors.shutdownAndAwaitTermination(executorService, Duration.ofSeconds(2));</span>
-<span class="nc" id="L85">    }</span>
+<span class="nc" id="L87">        MoreExecutors.shutdownAndAwaitTermination(executorService, Duration.ofSeconds(2));</span>
+<span class="nc" id="L88">    }</span>
 
     /**
      * Creates a map of all dependency version resolutions used in this project in a given scope. The result is a map from names to a list of version numbers used in the project, based on the element
@@ -100,66 +103,98 @@ public final class DependencyTreeResolver
     public ImmutableSetMultimap&lt;QualifiedName, VersionResolutionCollection&gt; computeResolutionMap(final MavenProject project, final ScopeLimitingFilter scopeFilter)
             throws MojoExecutionException, AbstractArtifactResolutionException, VersionRangeResolutionException
     {
-<span class="nc" id="L103">        checkNotNull(project, &quot;project is null&quot;);</span>
-<span class="nc" id="L104">        checkNotNull(scopeFilter, &quot;scope is null&quot;);</span>
+<span class="nc" id="L106">        checkNotNull(project, &quot;project is null&quot;);</span>
+<span class="nc" id="L107">        checkNotNull(scopeFilter, &quot;scope is null&quot;);</span>
 
-<span class="nc" id="L106">        final ImmutableSetMultimap.Builder&lt;QualifiedName, VersionResolution&gt; collector = ImmutableSetMultimap.builder();</span>
-<span class="nc" id="L107">        final ImmutableList.Builder&lt;ListenableFuture&lt;?&gt;&gt; futureBuilder = ImmutableList.builder();</span>
+<span class="nc" id="L109">        final ImmutableSetMultimap.Builder&lt;QualifiedName, VersionResolution&gt; collector = ImmutableSetMultimap.builder();</span>
+<span class="nc" id="L110">        final ImmutableList.Builder&lt;ListenableFuture&lt;?&gt;&gt; futureBuilder = ImmutableList.builder();</span>
 
-<span class="nc" id="L109">        boolean useParallelDependencyResolution = context.useFastResolution();</span>
+<span class="nc" id="L112">        boolean useParallelDependencyResolution = context.useFastResolution();</span>
         // Map from dependency name --&gt; list of resolutions found on the tree
-<span class="nc" id="L111">        LOG.debug(&quot;Using parallel dependency resolution: %s&quot;, useParallelDependencyResolution);</span>
+<span class="nc" id="L114">        LOG.debug(&quot;Using parallel dependency resolution: %s&quot;, useParallelDependencyResolution);</span>
 
         final ImmutableList&lt;Dependency&gt; dependencies;
-<span class="nc bnc" id="L114" title="All 2 branches missed.">        if (context.useDeepScan()) {</span>
-<span class="nc" id="L115">            LOG.debug(&quot;Running deep scan&quot;);</span>
-<span class="nc" id="L116">            dependencies = ImmutableList.copyOf(rootDependencyMap.getAllDependencies().values().stream().map(DependencyNode::getDependency).collect(toImmutableList()));</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        if (context.useDeepScan()) {</span>
+<span class="nc" id="L118">            LOG.debug(&quot;Running deep scan&quot;);</span>
+<span class="nc" id="L119">            dependencies = ImmutableList.copyOf(rootDependencyMap.getAllDependencies().values().stream().map(DependencyNode::getDependency).collect(toImmutableList()));</span>
         }
         else {
-<span class="nc" id="L119">            final ArtifactTypeRegistry stereotypes = context.getRepositorySystemSession().getArtifactTypeRegistry();</span>
+<span class="nc" id="L122">            final ArtifactTypeRegistry stereotypes = context.getRepositorySystemSession().getArtifactTypeRegistry();</span>
 
-<span class="nc" id="L121">            dependencies = ImmutableList.copyOf(project.getDependencies().stream().map(d -&gt; RepositoryUtils.toDependency(d, stereotypes)).collect(toImmutableList()));</span>
+<span class="nc" id="L124">            dependencies = ImmutableList.copyOf(project.getDependencies().stream().map(d -&gt; RepositoryUtils.toDependency(d, stereotypes)).collect(toImmutableList()));</span>
         }
 
-<span class="nc bnc" id="L124" title="All 2 branches missed.">        for (final Dependency dependency : dependencies) {</span>
-<span class="nc bnc" id="L125" title="All 2 branches missed.">            if (useParallelDependencyResolution) {</span>
-<span class="nc" id="L126">                futureBuilder.add(executorService.submit((Callable&lt;Void&gt;) () -&gt; {</span>
-<span class="nc" id="L127">                    resolveProjectDependency(dependency, scopeFilter, collector);</span>
-<span class="nc" id="L128">                    return null;</span>
+<span class="nc" id="L127">        final ImmutableSet.Builder&lt;Throwable&gt; throwableBuilder = ImmutableSet.builder();</span>
+
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        if (useParallelDependencyResolution) {</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">            for (final Dependency dependency : dependencies) {</span>
+<span class="nc" id="L131">                futureBuilder.add(executorService.submit((Callable&lt;Void&gt;) () -&gt; {</span>
+<span class="nc" id="L132">                    resolveProjectDependency(dependency, scopeFilter, collector);</span>
+<span class="nc" id="L133">                    return null;</span>
                 }));
+<span class="nc" id="L135">            }</span>
+
+<span class="nc" id="L137">            final ImmutableList&lt;ListenableFuture&lt;?&gt;&gt; futures = futureBuilder.build();</span>
+
+<span class="nc bnc" id="L139" title="All 2 branches missed.">            for (final ListenableFuture&lt;?&gt; future : futures) {</span>
+                try {
+<span class="nc" id="L141">                    future.get();</span>
+                }
+<span class="nc" id="L143">                catch (InterruptedException e) {</span>
+<span class="nc" id="L144">                    Thread.currentThread().interrupt();</span>
+                }
+<span class="nc" id="L146">                catch (ExecutionException e) {</span>
+<span class="nc" id="L147">                    throwableBuilder.add(e.getCause());</span>
+<span class="nc" id="L148">                }</span>
+<span class="nc" id="L149">            }</span>
+<span class="nc" id="L150">        }</span>
+        else {
+<span class="nc bnc" id="L152" title="All 2 branches missed.">            for (final Dependency dependency : dependencies) {</span>
+                try {
+<span class="nc" id="L154">                    resolveProjectDependency(dependency, scopeFilter, collector);</span>
+                }
+<span class="nc" id="L156">                catch (Throwable t) {</span>
+<span class="nc" id="L157">                    throwableBuilder.add(t);</span>
+<span class="nc" id="L158">                }</span>
+<span class="nc" id="L159">            }</span>
+        }
+
+<span class="nc" id="L162">        final Set&lt;Throwable&gt; throwables = throwableBuilder.build();</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">        if (!throwables.isEmpty()) {</span>
+<span class="nc" id="L164">            throw processResolveProjectDependencyException(throwableBuilder.build());</span>
+        }
+
+<span class="nc" id="L167">        return VersionResolutionCollection.toResolutionMap(collector.build());</span>
+    }
+
+    private static MojoExecutionException processResolveProjectDependencyException(Set&lt;Throwable&gt; throwables)
+    {
+<span class="nc" id="L172">        ImmutableSet.Builder&lt;String&gt; failedDependenciesBuilder = ImmutableSet.builder();</span>
+<span class="nc" id="L173">        ImmutableSet.Builder&lt;String&gt; messageBuilder = ImmutableSet.builder();</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        for (Throwable t : throwables) {</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">            if (t instanceof DependencyResolutionException) {</span>
+<span class="nc" id="L176">                ((DependencyResolutionException) t).getResult().getUnresolvedDependencies()</span>
+<span class="nc" id="L177">                        .forEach(d -&gt; failedDependenciesBuilder.add(printDependency(d)));</span>
             }
             else {
-<span class="nc" id="L132">                resolveProjectDependency(dependency, scopeFilter, collector);</span>
+<span class="nc" id="L180">                messageBuilder.add(t.getMessage());</span>
             }
-<span class="nc" id="L134">        }</span>
+<span class="nc" id="L182">        }</span>
 
-<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (useParallelDependencyResolution) {</span>
-<span class="nc" id="L137">            final ImmutableList&lt;ListenableFuture&lt;?&gt;&gt; futures = futureBuilder.build();</span>
-<span class="nc" id="L138">            Throwable failed = null;</span>
-<span class="nc" id="L139">            boolean interrupted = false;</span>
-<span class="nc bnc" id="L140" title="All 2 branches missed.">            for (ListenableFuture&lt;?&gt; future : futures) {</span>
-                try {
-<span class="nc bnc" id="L142" title="All 4 branches missed.">                    if (interrupted || failed != null) {</span>
-<span class="nc" id="L143">                        future.cancel(true);</span>
-                    }
-<span class="nc" id="L145">                    future.get();</span>
-                }
-<span class="nc" id="L147">                catch (InterruptedException e) {</span>
-<span class="nc" id="L148">                    Thread.currentThread().interrupt();</span>
-<span class="nc" id="L149">                    interrupted = true;</span>
-                }
-<span class="nc" id="L151">                catch (ExecutionException e) {</span>
-<span class="nc bnc" id="L152" title="All 2 branches missed.">                    if (failed == null) {</span>
-<span class="nc" id="L153">                        failed = e.getCause();</span>
-                    }
-<span class="nc" id="L155">                }</span>
-<span class="nc" id="L156">            }</span>
-<span class="nc bnc" id="L157" title="All 2 branches missed.">            if (failed != null) {</span>
-<span class="nc" id="L158">                throw new MojoExecutionException(&quot;While resolving dependencies:&quot;, failed);</span>
+<span class="nc" id="L184">        String message = Joiner.on(&quot;    \n&quot;).join(messageBuilder.build());</span>
+<span class="nc" id="L185">        Set&lt;String&gt; failedDependencies = failedDependenciesBuilder.build();</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">        if (!failedDependencies.isEmpty()) {</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">            if (!message.isEmpty()) {</span>
+<span class="nc" id="L188">                message += &quot;\n&quot;;</span>
             }
+<span class="nc" id="L190">            message += &quot;Could not resolve dependencies: [&quot; + Joiner.on(&quot;, &quot;).join(failedDependencies) + &quot;]&quot;;</span>
         }
+<span class="nc" id="L192">        return new MojoExecutionException(message);</span>
+    }
 
-<span class="nc" id="L162">        return VersionResolutionCollection.toResolutionMap(collector.build());</span>
+    private static String printDependency(Dependency d)
+    {
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        return d.getArtifact() + &quot; [&quot; + d.getScope() + (d.isOptional() ? &quot;, optional&quot; : &quot;&quot;) + &quot;]&quot;;</span>
     }
 
     /**
@@ -169,49 +204,49 @@ public final class DependencyTreeResolver
     private void resolveProjectDependency(final Dependency dependency,
             final ScopeLimitingFilter visibleScopes,
             final ImmutableSetMultimap.Builder&lt;QualifiedName, VersionResolution&gt; collector)
-            throws MojoExecutionException, AbstractArtifactResolutionException, VersionRangeResolutionException
+            throws MojoExecutionException, DependencyResolutionException, AbstractArtifactResolutionException, VersionRangeResolutionException
     {
-<span class="nc" id="L174">        final QualifiedName dependencyName = QualifiedName.fromDependency(dependency);</span>
+<span class="nc" id="L209">        final QualifiedName dependencyName = QualifiedName.fromDependency(dependency);</span>
 
         // see if the resolved, direct dependency contain this name.
         // If not, the dependency is declared in a scope that is not used (it was filtered out by the scope filter
         // when the map was created.
-<span class="nc bnc" id="L179" title="All 2 branches missed.">        if (rootDependencyMap.getDirectDependencies().containsKey(dependencyName)) {</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">        if (rootDependencyMap.getDirectDependencies().containsKey(dependencyName)) {</span>
             // a direct dependency
-<span class="nc" id="L181">            final DependencyNode projectDependencyNode = rootDependencyMap.getDirectDependencies().get(dependencyName);</span>
-<span class="nc" id="L182">            checkState(visibleScopes.accept(projectDependencyNode, ImmutableList.of()), &quot;Dependency %s maps to %s, but scope filter would exclude it. This should never happen!&quot;, dependency, projectDependencyNode);</span>
-<span class="nc" id="L183">            computeVersionResolutionForDirectDependency(collector, dependency, projectDependencyNode);</span>
+<span class="nc" id="L216">            final DependencyNode projectDependencyNode = rootDependencyMap.getDirectDependencies().get(dependencyName);</span>
+<span class="nc" id="L217">            checkState(visibleScopes.accept(projectDependencyNode, ImmutableList.of()), &quot;Dependency %s maps to %s, but scope filter would exclude it. This should never happen!&quot;, dependency, projectDependencyNode);</span>
+<span class="nc" id="L218">            computeVersionResolutionForDirectDependency(collector, dependency, projectDependencyNode);</span>
         }
 
         // could be a dependency in the full dependency list
-<span class="nc" id="L187">        final DependencyNode projectDependencyNode = rootDependencyMap.getAllDependencies().get(dependencyName);</span>
+<span class="nc" id="L222">        final DependencyNode projectDependencyNode = rootDependencyMap.getAllDependencies().get(dependencyName);</span>
         // A project dependency could be e.g. in test scope, but the map has been computed in a narrower scope (e.g. compile)
         // in that case, it does not contain a dependency node for the dependency. That is ok, simply ignore it.
-<span class="nc bnc" id="L190" title="All 2 branches missed.">        if (projectDependencyNode == null) {</span>
-<span class="nc" id="L191">            return;</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">        if (projectDependencyNode == null) {</span>
+<span class="nc" id="L226">            return;</span>
         }
-<span class="nc" id="L193">        checkState(visibleScopes.accept(projectDependencyNode, ImmutableList.of()), &quot;Dependency %s maps to %s, but scope filter would exclude it. This should never happen!&quot;, dependency, projectDependencyNode);</span>
+<span class="nc" id="L228">        checkState(visibleScopes.accept(projectDependencyNode, ImmutableList.of()), &quot;Dependency %s maps to %s, but scope filter would exclude it. This should never happen!&quot;, dependency, projectDependencyNode);</span>
 
         try {
             // remove the test scope for resolving all the transitive dependencies. Anything that was pulled in in test scope,
             // now needs its dependencies resolved in compile+runtime scope, not test scope.
-<span class="nc" id="L198">            final ScopeLimitingFilter dependencyScope = ScopeLimitingFilter.computeTransitiveScope(dependency.getScope());</span>
-<span class="nc" id="L199">            computeVersionResolutionForTransitiveDependencies(collector, dependency, projectDependencyNode, dependencyScope);</span>
+<span class="nc" id="L233">            final ScopeLimitingFilter dependencyScope = ScopeLimitingFilter.computeTransitiveScope(dependency.getScope());</span>
+<span class="nc" id="L234">            computeVersionResolutionForTransitiveDependencies(collector, dependency, projectDependencyNode, dependencyScope);</span>
         }
-<span class="nc" id="L201">        catch (ProjectBuildingException e) {</span>
+<span class="nc" id="L236">        catch (ProjectBuildingException e) {</span>
             // This is an optimization and a bug workaround at the same time. Some artifacts exist that
             // specify a packaging that is not natively supported by maven (e.g. bundle of OSGi bundles), however they
             // do not bring the necessary extensions to deal with that type. As a result, this causes a &quot;could not read model&quot;
             // exception. Ignore the transitive dependencies if the project node does not suggest any child artifacts.
-<span class="nc bnc" id="L206" title="All 2 branches missed.">            if (projectDependencyNode.getChildren().isEmpty()) {</span>
-<span class="nc" id="L207">                LOG.debug(&quot;Ignoring model building exception for %s, no children were declared&quot;, dependency);</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">            if (projectDependencyNode.getChildren().isEmpty()) {</span>
+<span class="nc" id="L242">                LOG.debug(&quot;Ignoring model building exception for %s, no children were declared&quot;, dependency);</span>
             }
             else {
-<span class="nc" id="L210">                LOG.warn(&quot;Could not read POM for %s, ignoring project and its dependencies!&quot;, dependency);</span>
+<span class="nc" id="L245">                LOG.warn(&quot;Could not read POM for %s, ignoring project and its dependencies!&quot;, dependency);</span>
 //                throw e;
             }
-<span class="nc" id="L213">        }</span>
-<span class="nc" id="L214">    }</span>
+<span class="nc" id="L248">        }</span>
+<span class="nc" id="L249">    }</span>
 
     /**
      * Create a version resolution for the given direct requestingDependency and artifact.
@@ -222,50 +257,50 @@ public final class DependencyTreeResolver
             final DependencyNode resolvedDependencyNode)
             throws AbstractArtifactResolutionException, VersionRangeResolutionException, MojoExecutionException
     {
-<span class="nc" id="L225">        final QualifiedName requestingDependencyName = QualifiedName.fromDependency(requestingDependency);</span>
+<span class="nc" id="L260">        final QualifiedName requestingDependencyName = QualifiedName.fromDependency(requestingDependency);</span>
 
-<span class="nc" id="L227">        final RepositorySystem repoSystem = context.getRepositorySystem();</span>
+<span class="nc" id="L262">        final RepositorySystem repoSystem = context.getRepositorySystem();</span>
 
-<span class="nc" id="L229">        Artifact artifact = convertToPomArtifact(requestingDependency.getArtifact());</span>
-<span class="nc bnc" id="L230" title="All 2 branches missed.">        if (artifact.isSnapshot()) {</span>
+<span class="nc" id="L264">        Artifact artifact = convertToPomArtifact(requestingDependency.getArtifact());</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">        if (artifact.isSnapshot()) {</span>
             // convert version of a snapshot artifact to be SNAPSHOT, otherwise the
             // version range resolver will try to match the timestamp version
-<span class="nc" id="L233">            artifact = artifact.setVersion(artifact.getBaseVersion());</span>
+<span class="nc" id="L268">            artifact = artifact.setVersion(artifact.getBaseVersion());</span>
         }
 
-<span class="nc" id="L236">        final VersionRangeRequest request = context.createVersionRangeRequest(artifact);</span>
-<span class="nc" id="L237">        final VersionRangeResult result = repoSystem.resolveVersionRange(context.getRepositorySystemSession(), request);</span>
+<span class="nc" id="L271">        final VersionRangeRequest request = context.createVersionRangeRequest(artifact);</span>
+<span class="nc" id="L272">        final VersionRangeResult result = repoSystem.resolveVersionRange(context.getRepositorySystemSession(), request);</span>
 
-<span class="nc bnc" id="L239" title="All 2 branches missed.">        if (!result.getVersions().contains(resolvedDependencyNode.getVersion())) {</span>
-<span class="nc" id="L240">            throw new MojoExecutionException(format(&quot;Cannot determine the recommended version of dependency '%s'; its version specification is '%s', and the resolved version is '%s'.&quot;,</span>
-<span class="nc" id="L241">                    requestingDependency, requestingDependency.getArtifact().getBaseVersion(), resolvedDependencyNode.getVersion()));</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">        if (!result.getVersions().contains(resolvedDependencyNode.getVersion())) {</span>
+<span class="nc" id="L275">            throw new MojoExecutionException(format(&quot;Cannot determine the recommended version of dependency '%s'; its version specification is '%s', and the resolved version is '%s'.&quot;,</span>
+<span class="nc" id="L276">                    requestingDependency, requestingDependency.getArtifact().getBaseVersion(), resolvedDependencyNode.getVersion()));</span>
         }
 
         // dependency range contains the project version (or matches it)
 
         // version from the dependency artifact
-<span class="nc" id="L247">        final ComparableVersion expectedVersion = getVersion(resolvedDependencyNode);</span>
+<span class="nc" id="L282">        final ComparableVersion expectedVersion = getVersion(resolvedDependencyNode);</span>
 
         // this is a direct dependency; it made it through the filter in resolveProjectDependency.
-<span class="nc bnc" id="L250" title="All 2 branches missed.">        final boolean managedDependency = (resolvedDependencyNode.getManagedBits() &amp; DependencyNode.MANAGED_VERSION) != 0;</span>
-<span class="nc" id="L251">        final VersionResolution resolution = VersionResolution.forDirectDependency(QualifiedName.fromProject(context.getRootProject()), expectedVersion, managedDependency);</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">        final boolean managedDependency = (resolvedDependencyNode.getManagedBits() &amp; DependencyNode.MANAGED_VERSION) != 0;</span>
+<span class="nc" id="L286">        final VersionResolution resolution = VersionResolution.forDirectDependency(QualifiedName.fromProject(context.getRootProject()), expectedVersion, managedDependency);</span>
 
-<span class="nc bnc" id="L253" title="All 2 branches missed.">        if (isIncluded(resolvedDependencyNode, expectedVersion, expectedVersion)) {</span>
-<span class="nc" id="L254">            final Strategy strategy = context.getStrategyCache().forQualifiedName(requestingDependencyName);</span>
-<span class="nc bnc" id="L255" title="All 2 branches missed.">            checkState(strategy != null, &quot;Strategy for %s is null, this should never happen (could not find default strategy?&quot;, requestingDependencyName);</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">        if (isIncluded(resolvedDependencyNode, expectedVersion, expectedVersion)) {</span>
+<span class="nc" id="L289">            final Strategy strategy = context.getStrategyCache().forQualifiedName(requestingDependencyName);</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">            checkState(strategy != null, &quot;Strategy for %s is null, this should never happen (could not find default strategy?&quot;, requestingDependencyName);</span>
 
-<span class="nc bnc" id="L257" title="All 2 branches missed.">            if (!strategy.isCompatible(expectedVersion, expectedVersion)) {</span>
-<span class="nc" id="L258">                resolution.conflict();</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">            if (!strategy.isCompatible(expectedVersion, expectedVersion)) {</span>
+<span class="nc" id="L293">                resolution.conflict();</span>
             }
-<span class="nc" id="L260">        }</span>
+<span class="nc" id="L295">        }</span>
         else {
-<span class="nc" id="L262">            LOG.debug(&quot;VersionResolution %s is excluded by configuration.&quot;, resolution);</span>
+<span class="nc" id="L297">            LOG.debug(&quot;VersionResolution %s is excluded by configuration.&quot;, resolution);</span>
         }
 
-<span class="nc" id="L265">        synchronized (collector) {</span>
-<span class="nc" id="L266">            collector.put(requestingDependencyName, resolution);</span>
-<span class="nc" id="L267">        }</span>
-<span class="nc" id="L268">    }</span>
+<span class="nc" id="L300">        synchronized (collector) {</span>
+<span class="nc" id="L301">            collector.put(requestingDependencyName, resolution);</span>
+<span class="nc" id="L302">        }</span>
+<span class="nc" id="L303">    }</span>
 
     /**
      * Resolve all transitive dependencies relative to a given dependency, based off the artifact given. A scope filter can be added which limits the
@@ -276,24 +311,24 @@ public final class DependencyTreeResolver
             final Dependency requestingDependency,
             final DependencyNode dependencyNodeForDependency,
             final DependencyFilter scopeFilter)
-            throws AbstractArtifactResolutionException, ProjectBuildingException, MojoExecutionException
+            throws AbstractArtifactResolutionException, ProjectBuildingException, DependencyResolutionException
     {
-<span class="nc" id="L281">        final AndDependencyFilter filter = new AndDependencyFilter(scopeFilter, new CheckExclusionsFilter(requestingDependency.getExclusions()));</span>
+<span class="nc" id="L316">        final AndDependencyFilter filter = new AndDependencyFilter(scopeFilter, new CheckExclusionsFilter(requestingDependency.getExclusions()));</span>
 
-<span class="nc" id="L283">        final DependencyMap dependencyMap = new DependencyMapBuilder(context).mapDependency(dependencyNodeForDependency, filter);</span>
-<span class="nc" id="L284">        final Collection&lt;DependencyNode&gt; transitiveDependencies = dependencyMap.getAllDependencies().values();</span>
-<span class="nc" id="L285">        final QualifiedName requestingDependencyName = QualifiedName.fromDependency(requestingDependency);</span>
+<span class="nc" id="L318">        final DependencyMap dependencyMap = new DependencyMapBuilder(context).mapDependency(dependencyNodeForDependency, filter);</span>
+<span class="nc" id="L319">        final Collection&lt;DependencyNode&gt; transitiveDependencies = dependencyMap.getAllDependencies().values();</span>
+<span class="nc" id="L320">        final QualifiedName requestingDependencyName = QualifiedName.fromDependency(requestingDependency);</span>
 
-<span class="nc" id="L287">        final ImmutableSet&lt;DependencyNode&gt; filteredDependencies = transitiveDependencies.stream()</span>
-<span class="nc" id="L288">                .filter(d -&gt; scopeFilter.accept(d, ImmutableList.of()))</span>
-<span class="nc bnc" id="L289" title="All 2 branches missed.">                .filter(d -&gt; !d.getDependency().isOptional())</span>
-<span class="nc" id="L290">                .collect(toImmutableSet());</span>
+<span class="nc" id="L322">        final ImmutableSet&lt;DependencyNode&gt; filteredDependencies = transitiveDependencies.stream()</span>
+<span class="nc" id="L323">                .filter(d -&gt; scopeFilter.accept(d, ImmutableList.of()))</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">                .filter(d -&gt; !d.getDependency().isOptional())</span>
+<span class="nc" id="L325">                .collect(toImmutableSet());</span>
 
-<span class="nc bnc" id="L292" title="All 2 branches missed.">        for (final DependencyNode dependencyNode : filteredDependencies) {</span>
-<span class="nc" id="L293">            final QualifiedName dependencyName = QualifiedName.fromDependencyNode(dependencyNode);</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">        for (final DependencyNode dependencyNode : filteredDependencies) {</span>
+<span class="nc" id="L328">            final QualifiedName dependencyName = QualifiedName.fromDependencyNode(dependencyNode);</span>
 
-<span class="nc" id="L295">            final DependencyNode projectDependencyNode = rootDependencyMap.getAllDependencies().get(dependencyName);</span>
-<span class="nc bnc" id="L296" title="All 2 branches missed.">            if (projectDependencyNode == null) {</span>
+<span class="nc" id="L330">            final DependencyNode projectDependencyNode = rootDependencyMap.getAllDependencies().get(dependencyName);</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">            if (projectDependencyNode == null) {</span>
                 // the next condition can happen if a dependency is required by one dependency but then overridden by another. e.g.
                 //
                 //   guava (*29.1-jre*, 25.1-android)
@@ -307,35 +342,35 @@ public final class DependencyTreeResolver
                 //
                 // This is normal situation and the dependency can just be dropped.
                 //
-<span class="nc" id="L310">                continue;</span>
+<span class="nc" id="L345">                continue;</span>
             }
 
-<span class="nc" id="L313">            final ComparableVersion resolvedVersion = getVersion(projectDependencyNode);</span>
-<span class="nc" id="L314">            final ComparableVersion expectedVersion = getVersion(dependencyNode);</span>
+<span class="nc" id="L348">            final ComparableVersion resolvedVersion = getVersion(projectDependencyNode);</span>
+<span class="nc" id="L349">            final ComparableVersion expectedVersion = getVersion(dependencyNode);</span>
 
-<span class="nc bnc" id="L316" title="All 2 branches missed.">            final boolean managedDependency = (projectDependencyNode.getManagedBits() &amp; DependencyNode.MANAGED_VERSION) != 0;</span>
-<span class="nc" id="L317">            final VersionResolution resolution = VersionResolution.forTransitiveDependency(requestingDependencyName, expectedVersion, managedDependency);</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">            final boolean managedDependency = (projectDependencyNode.getManagedBits() &amp; DependencyNode.MANAGED_VERSION) != 0;</span>
+<span class="nc" id="L352">            final VersionResolution resolution = VersionResolution.forTransitiveDependency(requestingDependencyName, expectedVersion, managedDependency);</span>
 
-<span class="nc bnc" id="L319" title="All 2 branches missed.">            if (isIncluded(dependencyNode, expectedVersion, resolvedVersion)) {</span>
-<span class="nc" id="L320">                final Strategy strategy = context.getStrategyCache().forQualifiedName(dependencyName);</span>
-<span class="nc bnc" id="L321" title="All 2 branches missed.">                checkState(strategy != null, &quot;Strategy for %s is null, this should never happen (could not find default strategy?&quot;, dependencyName);</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">            if (isIncluded(dependencyNode, expectedVersion, resolvedVersion)) {</span>
+<span class="nc" id="L355">                final Strategy strategy = context.getStrategyCache().forQualifiedName(dependencyName);</span>
+<span class="nc bnc" id="L356" title="All 2 branches missed.">                checkState(strategy != null, &quot;Strategy for %s is null, this should never happen (could not find default strategy?&quot;, dependencyName);</span>
 
-<span class="nc bnc" id="L323" title="All 2 branches missed.">                if (!strategy.isCompatible(expectedVersion, resolvedVersion)) {</span>
-<span class="nc" id="L324">                    resolution.conflict();</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">                if (!strategy.isCompatible(expectedVersion, resolvedVersion)) {</span>
+<span class="nc" id="L359">                    resolution.conflict();</span>
                 }
             }
-<span class="nc" id="L327">            synchronized (collector) {</span>
-<span class="nc" id="L328">                collector.put(dependencyName, resolution);</span>
-<span class="nc" id="L329">            }</span>
-<span class="nc" id="L330">        }</span>
-<span class="nc" id="L331">    }</span>
+<span class="nc" id="L362">            synchronized (collector) {</span>
+<span class="nc" id="L363">                collector.put(dependencyName, resolution);</span>
+<span class="nc" id="L364">            }</span>
+<span class="nc" id="L365">        }</span>
+<span class="nc" id="L366">    }</span>
 
     /**
      * Returns true if a given artifact and version should be checked.
      */
     private boolean isIncluded(DependencyNode dependencyNodeForDependency, ComparableVersion expectedVersion, ComparableVersion resolvedVersion)
     {
-<span class="nc" id="L338">        return context.getExclusions().stream().noneMatch(exclusion -&gt; exclusion.matches(dependencyNodeForDependency, expectedVersion, resolvedVersion));</span>
+<span class="nc" id="L373">        return context.getExclusions().stream().noneMatch(exclusion -&gt; exclusion.matches(dependencyNodeForDependency, expectedVersion, resolvedVersion));</span>
     }
 
     /**
@@ -344,10 +379,10 @@ public final class DependencyTreeResolver
     private static ComparableVersion getVersion(DependencyNode dependencyNode)
             throws OverConstrainedVersionException
     {
-<span class="nc" id="L347">        checkNotNull(dependencyNode, &quot;dependencyNode is null&quot;);</span>
+<span class="nc" id="L382">        checkNotNull(dependencyNode, &quot;dependencyNode is null&quot;);</span>
 
-<span class="nc bnc" id="L349" title="All 2 branches missed.">        checkState(dependencyNode.getVersion() != null, &quot;DependencyNode %s has a null version selected. Please report a bug!&quot;, dependencyNode);</span>
-<span class="nc" id="L350">        return new ComparableVersion(dependencyNode.getVersion().toString());</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">        checkState(dependencyNode.getVersion() != null, &quot;DependencyNode %s has a null version selected. Please report a bug!&quot;, dependencyNode);</span>
+<span class="nc" id="L385">        return new ComparableVersion(dependencyNode.getVersion().toString());</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

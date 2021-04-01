@@ -9,9 +9,9 @@ dependency-versions-check-maven-plugin,org.basepom.mojo.dvc.mojo,DependencyVersi
 dependency-versions-check-maven-plugin,org.basepom.mojo.dvc.mojo,HelpMojo,893,0,110,0,159,0,71,0,16,0
 dependency-versions-check-maven-plugin,org.basepom.mojo.dvc.dependency,DependencyMapBuilder.ProjectKey,110,0,12,0,20,0,11,0,5,0
 dependency-versions-check-maven-plugin,org.basepom.mojo.dvc.dependency,DependencyMap,21,0,0,0,6,0,3,0,3,0
-dependency-versions-check-maven-plugin,org.basepom.mojo.dvc.dependency,DependencyMapBuilder,384,0,32,0,74,0,25,0,9,0
-dependency-versions-check-maven-plugin,org.basepom.mojo.dvc.dependency,DependencyTreeResolver,598,0,52,0,119,0,40,0,14,0
-dependency-versions-check-maven-plugin,org.basepom.mojo.dvc,AbstractDependencyVersionsMojo,267,0,12,0,54,0,23,0,17,0
+dependency-versions-check-maven-plugin,org.basepom.mojo.dvc.dependency,DependencyMapBuilder,395,0,34,0,80,0,26,0,9,0
+dependency-versions-check-maven-plugin,org.basepom.mojo.dvc.dependency,DependencyTreeResolver,707,0,56,0,136,0,45,0,17,0
+dependency-versions-check-maven-plugin,org.basepom.mojo.dvc,AbstractDependencyVersionsMojo,273,0,12,0,56,0,24,0,18,0
 dependency-versions-check-maven-plugin,org.basepom.mojo.dvc,CheckExclusionsFilter,57,0,10,0,10,0,7,0,2,0
 dependency-versions-check-maven-plugin,org.basepom.mojo.dvc,ScopeLimitingFilter,157,0,18,0,33,0,21,0,7,0
 dependency-versions-check-maven-plugin,org.basepom.mojo.dvc,ScopeLimitingFilter.Scope,54,0,0,0,2,0,1,0,1,0
