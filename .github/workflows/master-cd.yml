@@ -3,7 +3,7 @@ name: CD (Snapshot deployment)
 on:
   push:
     branches:
-    - master
+    - main
 
 jobs:
   cd:
