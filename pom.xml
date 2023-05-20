@@ -18,12 +18,12 @@
     <parent>
         <groupId>org.basepom</groupId>
         <artifactId>basepom-oss</artifactId>
-        <version>35</version>
+        <version>53</version>
     </parent>
 
     <groupId>org.basepom.maven</groupId>
     <artifactId>dependency-versions-check-maven-plugin</artifactId>
-    <version>3.2.1-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <description>
@@ -82,22 +82,39 @@
     </issueManagement>
 
     <properties>
-        <project.build.systemJdk>11</project.build.systemJdk>
-        <project.build.targetJdk>8</project.build.targetJdk>
+        <!-- maven 3.9.x insanity -->
+        <maven.plugin.validation>BRIEF</maven.plugin.validation>
 
-        <maven.site.deploy.skip>true</maven.site.deploy.skip>
+        <project.build.targetJdk>11</project.build.targetJdk>
+
+        <basepom.nexus-staging.staging-url>https://oss.sonatype.org/</basepom.nexus-staging.staging-url>
+        <basepom.release.profiles>basepom.oss-release,plugin-release</basepom.release.profiles>
+        <basepom.release.tag-name-format>dependency-versions-check-maven-plugin-@{project.version}</basepom.release.tag-name-format>
+
+        <basepom.site.skip>false</basepom.site.skip>
+        <basepom.site.scm.id>github</basepom.site.scm.id>
+        <basepom.site.scm.site-path>${project.artifactId}/development</basepom.site.scm.site-path>
+        <basepom.site.scm.skip-deploy>false</basepom.site.scm.skip-deploy>
+        <basepom.site.scm.url>scm:git:https://github.com/basepom/basepom.github.io.git</basepom.site.scm.url>
+
         <!-- site requires full javadoc generation -->
         <basepom.javadoc.skip>false</basepom.javadoc.skip>
 
-        <dep.maven-api.version>3.6.3</dep.maven-api.version>
-        <dep.maven-resolver.version>1.4.2</dep.maven-resolver.version>
-        <dep.plexus.version>2.1.0</dep.plexus.version>
-        <dep.plugin.plugin.version>3.6.0</dep.plugin.plugin.version>
-        <dep.slf4j.version>1.7.30</dep.slf4j.version>
-        <dep.guava.version>29.0-jre</dep.guava.version>
-        <dep.junit5.version>5.7.0</dep.junit5.version>
+        <dep.guava.version>31.1-jre</dep.guava.version>
+        <dep.junit5.version>5.9.3</dep.junit5.version>
+        <dep.slf4j.version>1.7.36</dep.slf4j.version>
 
-        <dep.plugin.jxr.version>3.0.0</dep.plugin.jxr.version>
+        <!-- Maven API version. Keep on 3.8.x for now -->
+        <dep.maven-api.version>3.8.7</dep.maven-api.version>
+        <!-- keep on 1.6 for maven 3.8 compatibility - see https://maven.apache.org/resolver/maven-3.8.x.html -->
+        <dep.maven-resolver.version>1.6.3</dep.maven-resolver.version>
+
+        <!-- other maven stuff -->
+        <dep.plexus.version>2.1.1</dep.plexus.version>
+        <dep.maven-shared-utils.version>3.4.2</dep.maven-shared-utils.version>
+
+        <!-- plugin tooling -->
+        <dep.plugin.plugin.version>3.9.0</dep.plugin.plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -116,6 +133,13 @@
     </dependencyManagement>
 
     <dependencies>
+        <!-- deps -->
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${dep.guava.version}</version>
+        </dependency>
 
         <!-- Maven provided dependencies -->
         <dependency>
@@ -185,15 +209,7 @@
         <dependency>
             <groupId>org.apache.maven.shared</groupId>
             <artifactId>maven-shared-utils</artifactId>
-            <version>3.3.3</version>
-        </dependency>
-
-        <!-- other dependencies -->
-
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${dep.guava.version}</version>
+            <version>${dep.maven-shared-utils.version}</version>
         </dependency>
 
         <!-- Test code -->
@@ -222,6 +238,7 @@
                     <version>${dep.plugin.plugin.version}</version>
                     <configuration>
                         <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
+                        <helpPackageName>org.basepom.mojo.dvc</helpPackageName>
                     </configuration>
                 </plugin>
 
@@ -230,30 +247,10 @@
                     <artifactId>plexus-component-metadata</artifactId>
                     <version>${dep.plexus.version}</version>
                 </plugin>
-
-                <plugin>
-                    <groupId>com.github.github</groupId>
-                    <artifactId>site-maven-plugin</artifactId>
-                    <version>0.12</version>
-                </plugin>
             </plugins>
         </pluginManagement>
 
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <configuration>
-                    <rules combine.children="append">
-                        <requireProperty>
-                            <property>project.build.targetJdk</property>
-                            <regex>^8$</regex>
-                            <regexMessage>Project must be built with JDK8 target.</regexMessage>
-                        </requireProperty>
-                    </rules>
-                </configuration>
-            </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
@@ -324,36 +321,6 @@
                     </exceptions>
                 </configuration>
             </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-site-plugin</artifactId>
-                <dependencies>
-                    <!-- Fluido is listed here for version update checking only -->
-                    <dependency>
-                        <groupId>org.apache.maven.skins</groupId>
-                        <artifactId>maven-fluido-skin</artifactId>
-                        <version>1.9</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <plugin>
-                <groupId>com.github.github</groupId>
-                <artifactId>site-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>site-deploy</phase>
-                        <goals>
-                            <goal>site</goal>
-                        </goals>
-                        <configuration>
-                            <server>github</server>
-                            <message>Creating site for ${project.version}</message>
-                            <noJekyll>true</noJekyll>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
@@ -361,70 +328,28 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>3.1.1</version>
-                <reportSets>
-                    <reportSet>
-                        <reports>
-                            <report>index</report>
-                            <report>summary</report>
-                            <report>team</report>
-                            <report>scm</report>
-                            <report>issue-management</report>
-                            <report>ci-management</report>
-                            <report>dependency-info</report>
-                            <report>dependencies</report>
-                        </reports>
-                    </reportSet>
-        </reportSets>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration combine.children="append">
+                    <author>false</author>
+                    <detectJavaApiLink>true</detectJavaApiLink>
+                    <linksource>true</linksource>
+                    <nodeprecated>false</nodeprecated>
+                    <nohelp>true</nohelp>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-plugin-plugin</artifactId>
+                <artifactId>maven-plugin-report-plugin</artifactId>
+                <version>${dep.plugin.plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-report-plugin</artifactId>
                 <version>${dep.plugin.surefire.version}</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <additionalJOption>--no-module-directories</additionalJOption>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jxr-plugin</artifactId>
-                <version>${dep.plugin.jxr.version}</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
                 <reportSets>
                     <reportSet>
                         <reports>
-                            <report>pmd</report>
-                        </reports>
-                    </reportSet>
-                </reportSets>
-            </plugin>
-            <plugin>
-                <groupId>com.github.spotbugs</groupId>
-                <artifactId>spotbugs-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <reportSets>
-                    <reportSet>
-                        <reports>
-                            <report>report</report>
+                            <report>failsafe-report-only</report>
                         </reports>
                     </reportSet>
                 </reportSets>
@@ -459,6 +384,44 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>plugin-release</id>
+            <properties>
+                <basepom.site.scm.site-path>${project.artifactId}/release-${project.version}</basepom.site.scm.site-path>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>enforce-java17</id>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <configuration>
+                                    <rules>
+                                        <requireJavaVersion>
+                                            <version>[17,)</version>
+                                        </requireJavaVersion>
+                                    </rules>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <!-- Profile to skip time-consuming steps. -->
+            <id>fast</id>
+            <properties>
+                <basepom.check.skip-all>true</basepom.check.skip-all>
+                <skipITs>true</skipITs>
+                <skipTests>true</skipTests>
+            </properties>
         </profile>
     </profiles>
 </project>
