@@ -33,10 +33,6 @@ import org.basepom.mojo.dvc.version.VersionResolutionCollection;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.version.Version;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -56,7 +52,7 @@ public final class DependencyVersionsListMojo
 
     @Override
     protected void doExecute(final ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> resolutionMap, final DependencyMap rootDependencyMap) {
-        final ImmutableMap<QualifiedName, Collection<VersionResolutionCollection>> filteredMap = ImmutableMap.copyOf(Maps.filterValues(
+        final var filteredMap = ImmutableMap.copyOf(Maps.filterValues(
                 resolutionMap.asMap(),
                 v -> {
                     // report if no condition is set.
@@ -89,7 +85,7 @@ public final class DependencyVersionsListMojo
             return;
         }
 
-        final ImmutableMap<QualifiedName, DependencyNode> rootDependencies = rootDependencyMap.getAllDependencies();
+        final var rootDependencies = rootDependencyMap.getAllDependencies();
 
         // calculate padding for columnar output
         final int namePadding = filteredMap.keySet().stream()
@@ -98,7 +94,7 @@ public final class DependencyVersionsListMojo
                 .filter(e -> filteredMap.containsKey(e.getKey()))
                 .map(e -> e.getValue().getDependency().getScope().length()).reduce(0, Math::max);
 
-        for (final Map.Entry<QualifiedName, Collection<VersionResolutionCollection>> entry : filteredMap.entrySet()) {
+        for (final var entry : filteredMap.entrySet()) {
             final QualifiedName dependencyName = entry.getKey();
             final DependencyNode currentDependency = rootDependencies.get(dependencyName);
             assert currentDependency != null;
@@ -127,12 +123,12 @@ public final class DependencyVersionsListMojo
                 mb.a(actualVersion);
             }
 
-            final ImmutableSortedSet<VersionResolutionCollection> unselectedVersions = ImmutableSortedSet.copyOf(Sets.filter(resolutions, v -> !v.isMatchFor(actualVersion)));
+            final var unselectedVersions = ImmutableSortedSet.copyOf(Sets.filter(resolutions, v -> !v.isMatchFor(actualVersion)));
 
             if (!unselectedVersions.isEmpty()) {
                 mb.a(" (");
 
-                for (final Iterator<VersionResolutionCollection> it = unselectedVersions.iterator(); it.hasNext(); ) {
+                for (final var it = unselectedVersions.iterator(); it.hasNext(); ) {
                     final VersionResolutionCollection resolution = it.next();
 
                     final String result = resolution.getExpectedVersion().toString();

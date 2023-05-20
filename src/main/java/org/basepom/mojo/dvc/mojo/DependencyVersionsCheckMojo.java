@@ -34,9 +34,6 @@ import org.basepom.mojo.dvc.version.VersionResolutionElement;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.version.Version;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -80,7 +77,7 @@ public class DependencyVersionsCheckMojo
             throws Exception
     {
         // filter out what to display.
-        final ImmutableMap<QualifiedName, Collection<VersionResolutionCollection>> filteredMap = ImmutableMap.copyOf(Maps.filterValues(
+        final var filteredMap = ImmutableMap.copyOf(Maps.filterValues(
                 resolutionMap.asMap(),
                 v -> {
                     // report if no condition is set.
@@ -113,13 +110,13 @@ public class DependencyVersionsCheckMojo
             return;
         }
 
-        final ImmutableMap<QualifiedName, DependencyNode> rootDependencies = rootDependencyMap.getAllDependencies();
+        final var rootDependencies = rootDependencyMap.getAllDependencies();
 
         boolean directConflicts = false;
         boolean transitiveConflicts = false;
 
-        for (final Map.Entry<QualifiedName, Collection<VersionResolutionCollection>> entry : filteredMap.entrySet()) {
-            final ImmutableSetMultimap<ComparableVersion, VersionResolutionCollection> versionMap = entry.getValue().stream()
+        for (final var entry : filteredMap.entrySet()) {
+            final var versionMap = entry.getValue().stream()
                     .collect(toImmutableSetMultimap(VersionResolutionCollection::getExpectedVersion, Function.identity()));
 
             boolean willWarn = false;
@@ -152,7 +149,7 @@ public class DependencyVersionsCheckMojo
                     .newline();
 
             final int versionPadding = versionMap.keySet().stream().map(v -> v.toString().length()).reduce(0, Math::max);
-            for (final Map.Entry<ComparableVersion, Collection<VersionResolutionCollection>> versionEntry : versionMap.asMap().entrySet()) {
+            for (final var versionEntry : versionMap.asMap().entrySet()) {
                 final boolean hasConflictVersion = versionEntry.getValue().stream().anyMatch(VersionResolutionCollection::hasConflict);
                 final boolean perfectMatch = versionEntry.getValue().stream().anyMatch(v -> v.isMatchFor(resolvedVersion));
                 final String paddedVersion = Strings.padEnd(versionEntry.getKey().toString(), versionPadding + 1, ' ');
@@ -171,7 +168,7 @@ public class DependencyVersionsCheckMojo
 
                 mb.a("expected by ");
 
-                for (Iterator<VersionResolutionElement> it = versionEntry.getValue().stream()
+                for (var it = versionEntry.getValue().stream()
                         .flatMap(v -> v.getRequestingDependencies().stream())
                         .iterator(); it.hasNext(); ) {
                     final VersionResolutionElement versionResolutionElement = it.next();
