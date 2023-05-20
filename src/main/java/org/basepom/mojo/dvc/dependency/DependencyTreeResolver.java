@@ -97,11 +97,9 @@ public final class DependencyTreeResolver
      * @param scopeFilter Limits the scopes to resolve.
      * @return Map from qualified names to possible version resolutions.
      * @throws MojoExecutionException Parallel dependency resolution failed.
-     * @throws AbstractArtifactResolutionException Artifact version could not be resolved.
-     * @throws VersionRangeResolutionException Could not compute a version range resolution.
      */
     public ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> computeResolutionMap(final MavenProject project, final ScopeLimitingFilter scopeFilter)
-            throws MojoExecutionException, AbstractArtifactResolutionException, VersionRangeResolutionException
+            throws MojoExecutionException
     {
         checkNotNull(project, "project is null");
         checkNotNull(scopeFilter, "scope is null");
@@ -214,6 +212,8 @@ public final class DependencyTreeResolver
         if (rootDependencyMap.getDirectDependencies().containsKey(dependencyName)) {
             // a direct dependency
             final DependencyNode projectDependencyNode = rootDependencyMap.getDirectDependencies().get(dependencyName);
+            assert projectDependencyNode != null;
+
             checkState(visibleScopes.accept(projectDependencyNode, ImmutableList.of()), "Dependency %s maps to %s, but scope filter would exclude it. This should never happen!", dependency, projectDependencyNode);
             computeVersionResolutionForDirectDependency(collector, dependency, projectDependencyNode);
         }

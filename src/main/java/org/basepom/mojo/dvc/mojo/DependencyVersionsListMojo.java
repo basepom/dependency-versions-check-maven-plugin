@@ -55,9 +55,7 @@ public final class DependencyVersionsListMojo
     public boolean conflictsOnly = false;
 
     @Override
-    protected void doExecute(final ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> resolutionMap, final DependencyMap rootDependencyMap)
-            throws Exception
-    {
+    protected void doExecute(final ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> resolutionMap, final DependencyMap rootDependencyMap) {
         final ImmutableMap<QualifiedName, Collection<VersionResolutionCollection>> filteredMap = ImmutableMap.copyOf(Maps.filterValues(
                 resolutionMap.asMap(),
                 v -> {
@@ -102,20 +100,22 @@ public final class DependencyVersionsListMojo
 
         for (final Map.Entry<QualifiedName, Collection<VersionResolutionCollection>> entry : filteredMap.entrySet()) {
             final QualifiedName dependencyName = entry.getKey();
-            final ImmutableSortedSet<VersionResolutionCollection> resolutions = ImmutableSortedSet.copyOf(entry.getValue());
+            final DependencyNode currentDependency = rootDependencies.get(dependencyName);
+            assert currentDependency != null;
 
+            final ImmutableSortedSet<VersionResolutionCollection> resolutions = ImmutableSortedSet.copyOf(entry.getValue());
             final MessageBuilder mb = MessageUtils.buffer();
 
             mb.a(Strings.padEnd(dependencyName.getShortName() + ": ", namePadding + 2, ' '))
-                    .a(Strings.padEnd(rootDependencies.get(dependencyName).getDependency().getScope(), scopePadding + 1, ' '));
+                    .a(Strings.padEnd(currentDependency.getDependency().getScope(), scopePadding + 1, ' '));
 
             // fetch the resolved version from the dependency in the tree.
-            final Version dependencyVersion = rootDependencies.get(entry.getKey()).getVersion();
-            checkState(dependencyVersion != null, "Dependency Version for %s is null! File a bug!", rootDependencies.get(entry.getKey()));
+            final Version dependencyVersion = currentDependency.getVersion();
+            checkState(dependencyVersion != null, "Dependency Version for %s is null! File a bug!", currentDependency);
             final ComparableVersion actualVersion = new ComparableVersion(dependencyVersion.toString());
 
             final boolean isDirect = resolutions.stream().anyMatch(VersionResolutionCollection::hasDirectDependencies);
-            final boolean isManaged = (rootDependencies.get(entry.getKey()).getManagedBits() & DependencyNode.MANAGED_VERSION) != 0;
+            final boolean isManaged = (currentDependency.getManagedBits() & DependencyNode.MANAGED_VERSION) != 0;
 
             if (isManaged) {
                 mb.warning(actualVersion);

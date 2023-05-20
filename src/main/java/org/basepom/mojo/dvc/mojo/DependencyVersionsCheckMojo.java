@@ -126,13 +126,16 @@ public class DependencyVersionsCheckMojo
             boolean willFail = false;
 
             final boolean isDirect = entry.getValue().stream().anyMatch(VersionResolutionCollection::hasDirectDependencies);
-            final boolean isManaged = (rootDependencies.get(entry.getKey()).getManagedBits() & DependencyNode.MANAGED_VERSION) != 0;
+            final QualifiedName dependencyName = entry.getKey();
+            final DependencyNode currentDependency = rootDependencies.get(dependencyName);
+            assert currentDependency != null;
 
-            final Version dependencyVersion = rootDependencies.get(entry.getKey()).getVersion();
-            checkState(dependencyVersion != null, "Dependency Version for %s is null! File a bug!", rootDependencies.get(entry.getKey()));
+            final boolean isManaged = (currentDependency.getManagedBits() & DependencyNode.MANAGED_VERSION) != 0;
+
+            final Version dependencyVersion = currentDependency.getVersion();
+            checkState(dependencyVersion != null, "Dependency Version for %s is null! File a bug!", currentDependency);
             final ComparableVersion resolvedVersion = new ComparableVersion(dependencyVersion.toString());
 
-            final QualifiedName dependencyName = entry.getKey();
             final Strategy strategy = strategyCache.forQualifiedName(dependencyName);
 
             final MessageBuilder mb = MessageUtils.buffer();
@@ -143,7 +146,7 @@ public class DependencyVersionsCheckMojo
                     .format(" (%s%s) - scope: %s - strategy: %s",
                             isDirect ? "direct" : "transitive",
                             isManaged ? ", managed" : "",
-                            rootDependencies.get(dependencyName).getDependency().getScope(),
+                            currentDependency.getDependency().getScope(),
                             strategy.getName()
                     )
                     .newline();
