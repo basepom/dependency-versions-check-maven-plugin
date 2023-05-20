@@ -120,15 +120,46 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.google.errorprone</groupId>
-                <artifactId>error_prone_annotations</artifactId>
-                <version>2.4.0</version>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-component-annotations</artifactId>
+                <version>${dep.plexus.version}</version>
             </dependency>
+
             <dependency>
-                <groupId>org.sonatype.plexus</groupId>
-                <artifactId>plexus-cipher</artifactId>
-                <version>1.7</version>
+                <groupId>org.apache.maven.shared</groupId>
+                <artifactId>maven-shared-utils</artifactId>
+                <version>${dep.maven-shared-utils.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${dep.slf4j.version}</version>
+            </dependency>
+
+            <!-- dependency convergence help -->
+            <!-- versions were chosen based on the dependency convergence report.
+                 comment out this section and rerun report for updates -->
+
+            <dependency>
+                <groupId>org.eclipse.sisu</groupId>
+                <artifactId>org.eclipse.sisu.inject</artifactId>
+                <version>0.3.5</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-classworlds</artifactId>
+                <version>2.6.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-utils</artifactId>
+                <version>3.5.1</version>
+            </dependency>
+            <!-- end dependency convergence help -->
+
         </dependencies>
     </dependencyManagement>
 
@@ -174,6 +205,13 @@
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-core</artifactId>
             <version>${dep.maven-api.version}</version>
+            <exclusions>
+                <!-- weird no_aop classifier prevents dep convergence -->
+                <exclusion>
+                    <groupId>com.google.inject</groupId>
+                    <artifactId>guice</artifactId>
+                </exclusion>
+            </exclusions>
             <scope>provided</scope>
         </dependency>
 
@@ -187,14 +225,12 @@
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-component-annotations</artifactId>
-            <version>${dep.plexus.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>${dep.slf4j.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -209,7 +245,6 @@
         <dependency>
             <groupId>org.apache.maven.shared</groupId>
             <artifactId>maven-shared-utils</artifactId>
-            <version>${dep.maven-shared-utils.version}</version>
         </dependency>
 
         <!-- Test code -->
