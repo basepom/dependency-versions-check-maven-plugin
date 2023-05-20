@@ -86,6 +86,7 @@
         <maven.plugin.validation>BRIEF</maven.plugin.validation>
 
         <project.build.targetJdk>11</project.build.targetJdk>
+        <project.moduleName>org.basepom.mojo.dvc</project.moduleName>
 
         <basepom.nexus-staging.staging-url>https://oss.sonatype.org/</basepom.nexus-staging.staging-url>
         <basepom.release.profiles>basepom.oss-release,plugin-release</basepom.release.profiles>
@@ -281,6 +282,17 @@
                     <groupId>org.codehaus.plexus</groupId>
                     <artifactId>plexus-component-metadata</artifactId>
                     <version>${dep.plexus.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <configuration>
+                        <archive>
+                            <manifestEntries combine.children="append">
+                                <Automatic-Module-Name>${project.moduleName}</Automatic-Module-Name>
+                            </manifestEntries>
+                        </archive>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
