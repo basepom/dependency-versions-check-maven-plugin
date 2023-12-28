@@ -100,7 +100,7 @@ public final class DependencyMapBuilder
         checkNotNull(scopeFilter, "scopeFilter is null");
 
         final DependencyResolutionRequest request = new DefaultDependencyResolutionRequest();
-        request.setRepositorySession(context.createProjectBuildingRequest().getRepositorySession());
+        request.setRepositorySession(context.getRepositorySystemSession());
         request.setMavenProject(project);
         request.setResolutionFilter(scopeFilter);
 

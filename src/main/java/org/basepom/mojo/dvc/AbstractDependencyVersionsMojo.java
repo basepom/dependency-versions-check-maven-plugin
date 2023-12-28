@@ -35,11 +35,13 @@ import org.basepom.mojo.dvc.model.ResolverDefinition;
 import org.basepom.mojo.dvc.model.VersionCheckExcludes;
 import org.basepom.mojo.dvc.strategy.StrategyProvider;
 import org.basepom.mojo.dvc.version.VersionResolutionCollection;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.util.artifact.JavaScopes;
+import org.eclipse.aether.util.graph.version.SnapshotVersionFilter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -242,6 +244,7 @@ public abstract class AbstractDependencyVersionsMojo
     public String defaultStrategy = "default";
 
     protected StrategyCache strategyCache;
+    protected RepositorySystemSession snapshotFilteredSession;
 
     public void execute()
             throws MojoExecutionException, MojoFailureException
@@ -266,6 +269,9 @@ public abstract class AbstractDependencyVersionsMojo
             LOG.debug("Starting %s mojo run!", this.getClass().getSimpleName());
 
             this.strategyCache = new StrategyCache(strategyProvider, resolvers, defaultStrategy);
+            this.snapshotFilteredSession = new DefaultRepositorySystemSession(mavenSession.getRepositorySession())
+                    .setVersionFilter(new SnapshotVersionFilter());
+
 
             final ScopeLimitingFilter scopeFilter = createScopeFilter();
             final DependencyMap rootDependencyMap = new DependencyMapBuilder(this).mapProject(project, scopeFilter);
@@ -359,7 +365,7 @@ public abstract class AbstractDependencyVersionsMojo
     @Override
     public RepositorySystemSession getRepositorySystemSession()
     {
-        return mavenSession.getRepositorySession();
+        return snapshotFilteredSession;
     }
 
     @Override

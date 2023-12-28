@@ -2,6 +2,14 @@
 
 This is the changelog for the maven dependency versions check plugin. It follows [Keep a Changelog v1.0.0](http://keepachangelog.com/en/1.0.0/).
 
+## 4.0.1 - 2023-12-27
+
+* Ignore SNAPSHOT releases when a dependency declares a version range.
+
+## 4.0.0 - 2023-05-19
+
+* rebuilt with Java 11
+
 ## 3.2.0 - 2021-04-01
 
 ### Fixed
