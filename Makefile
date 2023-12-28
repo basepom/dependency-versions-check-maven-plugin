@@ -28,7 +28,7 @@ install::
 install-fast:: MAVEN_CONFIG += -Pfast
 install-fast:: install
 
-test::
+run-tests::
 	${MAVEN} surefire:test
 
 deploy::
