@@ -11,52 +11,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc.model;
 
-import com.google.common.base.MoreObjects;
-import org.apache.maven.artifact.versioning.ComparableVersion;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import org.basepom.mojo.dvc.QualifiedName;
 import org.basepom.mojo.dvc.QualifiedNameMatcher;
-import org.eclipse.aether.graph.DependencyNode;
 
 import java.util.Objects;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.common.base.MoreObjects;
+import org.apache.maven.artifact.versioning.ComparableVersion;
+import org.eclipse.aether.graph.DependencyNode;
 
 /**
  * Mojo model, adds an exclude to the checker.
  */
-public class VersionCheckExcludes
-{
+public class VersionCheckExcludes {
+
     private String dependency = "";
     private ComparableVersion expected;
     private ComparableVersion resolved;
 
-    public void setDependency(final String dependency)
-    {
+    public void setDependency(final String dependency) {
         this.dependency = checkNotNull(dependency, "dependency is null").trim();
     }
 
-    public void setExpected(final String version)
-    {
+    public void setExpected(final String version) {
         checkNotNull(version, "version is null");
         this.expected = new ComparableVersion(version);
     }
 
-    public void setResolved(final String version)
-    {
+    public void setResolved(final String version) {
         checkNotNull(version, "version is null");
         this.resolved = new ComparableVersion(version);
     }
 
-    public boolean isValid()
-    {
+    public boolean isValid() {
         return (expected != null)
                 && (resolved != null);
     }
 
-    public boolean matches(final DependencyNode dependencyNode, final ComparableVersion expectedVersion, final ComparableVersion resolvedVersion)
-    {
+    public boolean matches(final DependencyNode dependencyNode, final ComparableVersion expectedVersion, final ComparableVersion resolvedVersion) {
         checkNotNull(dependencyNode, "dependencyNode is null");
         checkNotNull(expectedVersion, "expectedVersion is null");
         checkNotNull(resolvedVersion, "resolvedVersion is null");
@@ -70,8 +67,7 @@ public class VersionCheckExcludes
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("dependency", dependency)
                 .add("expected", expected)
@@ -80,8 +76,7 @@ public class VersionCheckExcludes
     }
 
     @Override
-    public boolean equals(final Object o)
-    {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
@@ -89,14 +84,13 @@ public class VersionCheckExcludes
             return false;
         }
         VersionCheckExcludes that = (VersionCheckExcludes) o;
-        return Objects.equals(dependency, that.dependency) &&
-                Objects.equals(expected, that.expected) &&
-                Objects.equals(resolved, that.resolved);
+        return Objects.equals(dependency, that.dependency)
+                && Objects.equals(expected, that.expected)
+                && Objects.equals(resolved, that.resolved);
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return Objects.hash(dependency, expected, resolved);
     }
 }

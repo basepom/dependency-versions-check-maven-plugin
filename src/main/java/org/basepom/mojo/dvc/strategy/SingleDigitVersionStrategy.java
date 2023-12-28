@@ -11,16 +11,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc.strategy;
 
-import org.apache.maven.artifact.versioning.ArtifactVersion;
-import org.apache.maven.artifact.versioning.ComparableVersion;
-import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.ComparableVersion;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
 /**
  * Single Digit, may have a prefix. Assume that larger numbers are backwards compatible.
@@ -30,17 +31,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Named("single-digit")
 @Singleton
 public class SingleDigitVersionStrategy
-        implements Strategy
-{
+        implements Strategy {
+
     @Override
-    public String getName()
-    {
+    public String getName() {
         return "single-digit";
     }
 
     @Override
-    public boolean isCompatible(final ComparableVersion expectedVersion, final ComparableVersion resolvedVersion)
-    {
+    public boolean isCompatible(final ComparableVersion expectedVersion, final ComparableVersion resolvedVersion) {
         final ArtifactVersion aprExpectedVersion = new DefaultArtifactVersion(checkNotNull(expectedVersion, "expectedVersion is null").getCanonical());
         final ArtifactVersion aprResolvedVersion = new DefaultArtifactVersion(checkNotNull(resolvedVersion, "resolvedVersion is null").getCanonical());
 

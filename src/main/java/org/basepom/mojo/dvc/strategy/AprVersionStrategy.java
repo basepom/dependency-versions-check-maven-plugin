@@ -11,23 +11,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc.strategy;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.Comparator;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 import com.google.common.base.Strings;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
-import java.util.Comparator;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
- * Implements Apache versioning strategy for two or three digits. It expects versions formatted as x.y, x.y.z. Versions
- * can have an additional qualifier.
+ * Implements Apache versioning strategy for two or three digits. It expects versions formatted as x.y, x.y.z. Versions can have an additional qualifier.
  * <p>
  * Version A (xa.ya.za) can replace Version B (xb.yb.zb) if xa == xb and xa &gt;= xb. component z is always compatible.
  * <p>
@@ -36,8 +35,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Named("apr")
 @Singleton
 public class AprVersionStrategy
-        implements Strategy
-{
+        implements Strategy {
+
     private final Comparator<ArtifactVersion> comparator = Comparator
             .comparing(ArtifactVersion::getMajorVersion, this::checkMajorCompatible)
             .thenComparing(ArtifactVersion::getMinorVersion, this::checkMinorCompatible)
@@ -45,14 +44,12 @@ public class AprVersionStrategy
             .thenComparing(ArtifactVersion::getQualifier, (a, e) -> checkQualifierCompatible(Strings.nullToEmpty(a), Strings.nullToEmpty(e)));
 
     @Override
-    public String getName()
-    {
+    public String getName() {
         return "apr";
     }
 
     @Override
-    public final boolean isCompatible(final ComparableVersion expectedVersion, final ComparableVersion resolvedVersion)
-    {
+    public final boolean isCompatible(final ComparableVersion expectedVersion, final ComparableVersion resolvedVersion) {
         final ArtifactVersion aprExpectedVersion = new DefaultArtifactVersion(checkNotNull(expectedVersion, "expectedVersion is null").getCanonical());
         final ArtifactVersion aprResolvedVersion = new DefaultArtifactVersion(checkNotNull(resolvedVersion, "resolvedVersion is null").getCanonical());
 
@@ -67,16 +64,14 @@ public class AprVersionStrategy
         return comparator.compare(aprExpectedVersion, aprResolvedVersion) >= 0; // more testing or compatible wins here.
     }
 
-    protected int checkMajorCompatible(int expectedMajor, int resolvedMajor)
-    {
+    protected int checkMajorCompatible(int expectedMajor, int resolvedMajor) {
         if (expectedMajor != resolvedMajor) {
             return -1; // incompatible if majors differ.
         }
         return 0; // otherwise more testing.
     }
 
-    protected int checkMinorCompatible(int expectedMinor, int resolvedMinor)
-    {
+    protected int checkMinorCompatible(int expectedMinor, int resolvedMinor) {
         if (resolvedMinor < expectedMinor) {
             return -1; // smaller version is not forward compatible
         }
@@ -84,13 +79,11 @@ public class AprVersionStrategy
         return 0; // otherwise more testing.
     }
 
-    protected int checkPatchCompatible(int expectedPatch, int resolvedPatch)
-    {
+    protected int checkPatchCompatible(int expectedPatch, int resolvedPatch) {
         return 0; // all patches are compatible, check the qualifiers
     }
 
-    protected int checkQualifierCompatible(String expectedQualifier, String resolvedQualifier)
-    {
+    protected int checkQualifierCompatible(String expectedQualifier, String resolvedQualifier) {
         if (!expectedQualifier.equals(resolvedQualifier)) {
             return -1; // if qualifiers don't match, things are not compatible (this makes things like 1.2.3-android and 1.2.3-jre not compatible!
         }

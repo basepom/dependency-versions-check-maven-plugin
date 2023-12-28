@@ -11,33 +11,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.basepom.mojo.dvc.dependency;
 
-import com.google.common.collect.ImmutableMap;
-import org.basepom.mojo.dvc.QualifiedName;
-import org.eclipse.aether.graph.DependencyNode;
+package org.basepom.mojo.dvc.dependency;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class DependencyMap
-{
+import org.basepom.mojo.dvc.QualifiedName;
+
+import com.google.common.collect.ImmutableMap;
+import org.eclipse.aether.graph.DependencyNode;
+
+public final class DependencyMap {
+
     private final ImmutableMap<QualifiedName, DependencyNode> allDependencies;
     private final ImmutableMap<QualifiedName, DependencyNode> directDependencies;
 
     DependencyMap(final ImmutableMap<QualifiedName, DependencyNode> allDependencies,
-            final ImmutableMap<QualifiedName, DependencyNode> directDependencies)
-    {
+            final ImmutableMap<QualifiedName, DependencyNode> directDependencies) {
         this.allDependencies = checkNotNull(allDependencies, "allDependencies is null");
         this.directDependencies = checkNotNull(directDependencies, "directDependencies is null");
     }
 
-    public ImmutableMap<QualifiedName, DependencyNode> getAllDependencies()
-    {
+    public ImmutableMap<QualifiedName, DependencyNode> getAllDependencies() {
         return allDependencies;
     }
 
-    public ImmutableMap<QualifiedName, DependencyNode> getDirectDependencies()
-    {
+    public ImmutableMap<QualifiedName, DependencyNode> getDirectDependencies() {
         return directDependencies;
     }
 }

@@ -11,7 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc.version;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static com.google.common.collect.ImmutableSetMultimap.toImmutableSetMultimap;
+
+import org.basepom.mojo.dvc.QualifiedName;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.Objects;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -19,36 +30,24 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
 import org.apache.maven.artifact.versioning.ComparableVersion;
-import org.basepom.mojo.dvc.QualifiedName;
-
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
-import static com.google.common.collect.ImmutableSetMultimap.toImmutableSetMultimap;
 
 public final class VersionResolutionCollection
-        implements Comparable<VersionResolutionCollection>
-{
+        implements Comparable<VersionResolutionCollection> {
+
     private final ImmutableSortedSet<VersionResolutionElement> requestingDependencies;
     private final ComparableVersion expectedVersion;
 
-    private VersionResolutionCollection(Map.Entry<ComparableVersion, Collection<VersionResolutionElement>> entry)
-    {
+    private VersionResolutionCollection(Map.Entry<ComparableVersion, Collection<VersionResolutionElement>> entry) {
         checkNotNull(entry, "entry is null");
         this.expectedVersion = entry.getKey();
         this.requestingDependencies = ImmutableSortedSet.copyOf(entry.getValue());
     }
 
-    public ImmutableSortedSet<VersionResolutionElement> getRequestingDependencies()
-    {
+    public ImmutableSortedSet<VersionResolutionElement> getRequestingDependencies() {
         return requestingDependencies;
     }
 
-    public ComparableVersion getExpectedVersion()
-    {
+    public ComparableVersion getExpectedVersion() {
         return expectedVersion;
     }
 
@@ -58,44 +57,36 @@ public final class VersionResolutionCollection
      * @param version The version to match to this collection.
      * @return True if the selected version exactly matches the expected version.
      */
-    public boolean isMatchFor(ComparableVersion version)
-    {
+    public boolean isMatchFor(ComparableVersion version) {
         checkNotNull(version, "version is null");
         return expectedVersion.getCanonical().equals(version.getCanonical());
     }
 
     @Override
-    public int compareTo(final VersionResolutionCollection other)
-    {
+    public int compareTo(final VersionResolutionCollection other) {
         if (other == null) {
             return 1;
-        }
-        else if (other == this || equals(other)) {
+        } else if (other == this || equals(other)) {
             return 0;
-        }
-        else {
+        } else {
             // order by expected version
             return this.getExpectedVersion().compareTo(other.getExpectedVersion());
         }
     }
 
-    public boolean hasConflict()
-    {
+    public boolean hasConflict() {
         return requestingDependencies.stream().anyMatch(VersionResolutionElement::hasConflict);
     }
 
-    public boolean hasDirectDependencies()
-    {
+    public boolean hasDirectDependencies() {
         return requestingDependencies.stream().anyMatch(VersionResolutionElement::isDirectDependency);
     }
 
-    public boolean hasManagedDependencies()
-    {
+    public boolean hasManagedDependencies() {
         return requestingDependencies.stream().anyMatch(VersionResolutionElement::isManagedDependency);
     }
 
-    public static ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> toResolutionMap(final SetMultimap<QualifiedName, VersionResolution> map)
-    {
+    public static ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> toResolutionMap(final SetMultimap<QualifiedName, VersionResolution> map) {
         final ImmutableSetMultimap.Builder<QualifiedName, VersionResolutionCollection> builder = ImmutableSetMultimap.builder();
         builder.orderKeysBy(QualifiedName::compareTo).orderValuesBy(VersionResolutionCollection::compareTo);
 
@@ -115,8 +106,7 @@ public final class VersionResolutionCollection
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("requestingDependencies", requestingDependencies)
                 .add("expectedVersion", expectedVersion)
@@ -124,8 +114,7 @@ public final class VersionResolutionCollection
     }
 
     @Override
-    public boolean equals(final Object o)
-    {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
@@ -133,13 +122,12 @@ public final class VersionResolutionCollection
             return false;
         }
         final VersionResolutionCollection that = (VersionResolutionCollection) o;
-        return requestingDependencies.equals(that.requestingDependencies) &&
-                expectedVersion.equals(that.expectedVersion);
+        return requestingDependencies.equals(that.requestingDependencies)
+                && expectedVersion.equals(that.expectedVersion);
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return Objects.hash(requestingDependencies, expectedVersion);
     }
 }

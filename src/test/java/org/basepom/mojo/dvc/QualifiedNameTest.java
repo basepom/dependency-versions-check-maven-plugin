@@ -11,20 +11,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.basepom.mojo.dvc;
 
-import org.junit.jupiter.api.Test;
+package org.basepom.mojo.dvc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class QualifiedNameTest
-{
+import org.junit.jupiter.api.Test;
+
+public class QualifiedNameTest {
+
     @Test
-    public void testSimple()
-    {
+    public void testSimple() {
         QualifiedName name = new QualifiedName("groupId", "artifactId", "demo", "none");
         assertEquals("groupId", name.getGroupId());
         assertEquals("artifactId", name.getArtifactId());
@@ -39,8 +39,7 @@ public class QualifiedNameTest
     }
 
     @Test
-    public void testNoType()
-    {
+    public void testNoType() {
         IllegalStateException e = assertThrows(IllegalStateException.class, () -> {
             new QualifiedName("groupId", "artifactId", null, "none");
         });
@@ -58,8 +57,7 @@ public class QualifiedNameTest
     }
 
     @Test
-    public void testNoClassifier()
-    {
+    public void testNoClassifier() {
         QualifiedName noClassifier = new QualifiedName("groupId", "artifactId", "demo", null);
         assertEquals("groupId", noClassifier.getGroupId());
         assertEquals("artifactId", noClassifier.getArtifactId());
@@ -73,8 +71,7 @@ public class QualifiedNameTest
     }
 
     @Test
-    public void testNoTypeAndClassifier()
-    {
+    public void testNoTypeAndClassifier() {
         QualifiedName noClassifier = new QualifiedName("groupId", "artifactId", null, null);
         assertEquals("groupId", noClassifier.getGroupId());
         assertEquals("artifactId", noClassifier.getArtifactId());
@@ -86,56 +83,51 @@ public class QualifiedNameTest
     }
 
     @Test
-    public void testEquality()
-    {
+    public void testEquality() {
         QualifiedName n1 = new QualifiedName("groupId", "artifactId", "demo", "none");
         QualifiedName n2 = new QualifiedName("groupId", "artifactId", "demo", "none");
 
-        assertTrue(n1.equals(n2));
-        assertTrue(n2.equals(n1));
+        assertEquals(n1, n2);
+        assertEquals(n2, n1);
         assertEquals(n1.hashCode(), n2.hashCode());
     }
 
     @Test
-    public void testTestJarEquality()
-    {
+    public void testTestJarEquality() {
         // test jar equality
         QualifiedName t1 = new QualifiedName("groupId", "artifactId", "test-jar", null);
         QualifiedName t2 = new QualifiedName("groupId", "artifactId", "jar", "tests");
-        assertTrue(t1.equals(t2));
-        assertTrue(t2.equals(t1));
+        assertEquals(t1, t2);
+        assertEquals(t2, t1);
         assertEquals(t1.hashCode(), t2.hashCode());
     }
 
     @Test
-    public void testNullTypeEquality()
-    {
+    public void testNullTypeEquality() {
         // type null and jar equality
         QualifiedName j1 = new QualifiedName("groupId", "artifactId", "jar", null);
         QualifiedName j2 = new QualifiedName("groupId", "artifactId", null, null);
-        assertTrue(j1.equals(j2));
-        assertTrue(j2.equals(j1));
+        assertEquals(j1, j2);
+        assertEquals(j2, j1);
         assertEquals(j1.hashCode(), j2.hashCode());
     }
 
     @Test
-    public void testNullClassifierEquality()
-    {
+    public void testNullClassifierEquality() {
         // classifier null and empty
         QualifiedName c1 = new QualifiedName("groupId", "artifactId", "jar", null);
         QualifiedName c2 = new QualifiedName("groupId", "artifactId", "jar", "");
-        assertTrue(c1.equals(c2));
-        assertTrue(c2.equals(c1));
+        assertEquals(c1, c2);
+        assertEquals(c2, c1);
         assertEquals(c1.hashCode(), c2.hashCode());
     }
 
     @Test
-    public void testTestJars()
-    {
+    public void testTestJars() {
         QualifiedName c1 = new QualifiedName("groupId", "artifactId", "test-jar", null);
         QualifiedName c2 = new QualifiedName("groupId", "artifactId", "jar", "tests");
 
-        assertTrue(c1.equals(c2));
+        assertEquals(c1, c2);
 
         assertEquals("groupId:artifactId:test-jar", c1.getFullName());
         assertEquals("groupId:artifactId:jar:tests", c2.getFullName());

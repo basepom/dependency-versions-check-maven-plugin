@@ -11,23 +11,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Splitter;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
 
 /**
  * Matches the group-id/artifact-id pair of a qualified name. May contain wildcards (*) in either group-id and artifact-id.
  */
-public final class QualifiedNameMatcher
-{
+public final class QualifiedNameMatcher {
 
     private static final Pattern WILDCARD_REGEXP = Pattern.compile("[^*]+|(\\*)");
     private static final Pattern WILDCARD_MATCH = Pattern.compile(".*");
@@ -35,15 +35,13 @@ public final class QualifiedNameMatcher
     private final Pattern groupPattern;
     private final Pattern artifactPattern;
 
-    public static QualifiedNameMatcher fromQualifiedName(final QualifiedName name)
-    {
+    public static QualifiedNameMatcher fromQualifiedName(final QualifiedName name) {
         checkNotNull(name, "name is null");
 
         return new QualifiedNameMatcher(name.getMinimalName());
     }
 
-    public QualifiedNameMatcher(final String pattern)
-    {
+    public QualifiedNameMatcher(final String pattern) {
         checkNotNull(pattern, "pattern is null");
         final List<String> elements = Splitter.on(':').trimResults().splitToList(pattern);
         checkState(!elements.isEmpty() && elements.size() < 3, "Pattern %s is not a valid inclusion pattern!", pattern);
@@ -52,8 +50,7 @@ public final class QualifiedNameMatcher
         this.artifactPattern = compileWildcard(elements.size() > 1 ? elements.get(1).trim() : ""); // use wildcard match if no artifact present
     }
 
-    public boolean matches(QualifiedName artifactName)
-    {
+    public boolean matches(QualifiedName artifactName) {
         checkNotNull(artifactName, "artifactName is null");
 
         return groupPattern.matcher(artifactName.getGroupId()).matches()
@@ -61,8 +58,7 @@ public final class QualifiedNameMatcher
     }
 
     @VisibleForTesting
-    static Pattern compileWildcard(final String wildcard)
-    {
+    static Pattern compileWildcard(final String wildcard) {
         if (wildcard.isEmpty()) {
             return WILDCARD_MATCH;
         }
@@ -72,8 +68,7 @@ public final class QualifiedNameMatcher
         while (m.find()) {
             if (m.group(1) != null) {
                 m.appendReplacement(b, ".*");
-            }
-            else {
+            } else {
                 m.appendReplacement(b, "\\\\Q" + m.group(0) + "\\\\E");
             }
         }

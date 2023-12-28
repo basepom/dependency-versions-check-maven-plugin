@@ -11,18 +11,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc.version;
 
-import com.google.common.base.MoreObjects;
-import org.apache.maven.artifact.versioning.ComparableVersion;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import org.basepom.mojo.dvc.QualifiedName;
 
 import java.util.Objects;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.common.base.MoreObjects;
+import org.apache.maven.artifact.versioning.ComparableVersion;
 
-public final class VersionResolution
-{
+public final class VersionResolution {
+
     /**
      * The dependencies that requests this specific version resolution.
      */
@@ -35,15 +37,13 @@ public final class VersionResolution
 
     public static VersionResolution forDirectDependency(final QualifiedName requestingDependency,
             final ComparableVersion expectedVersion,
-            final boolean managedDependency)
-    {
+            final boolean managedDependency) {
         return new VersionResolution(requestingDependency, expectedVersion, managedDependency, true);
     }
 
     public static VersionResolution forTransitiveDependency(final QualifiedName requestingDependency,
             final ComparableVersion expectedVersion,
-            final boolean managedDependency)
-    {
+            final boolean managedDependency) {
         return new VersionResolution(requestingDependency, expectedVersion, managedDependency, false);
     }
 
@@ -51,31 +51,26 @@ public final class VersionResolution
             final QualifiedName requestingDependency,
             final ComparableVersion expectedVersion,
             final boolean manageDependency,
-            final boolean directDependency)
-    {
+            final boolean directDependency) {
         checkNotNull(requestingDependency, "requestingDependencyName is null");
         this.requestingDependency = new VersionResolutionElement(requestingDependency, manageDependency, directDependency);
         this.expectedVersion = checkNotNull(expectedVersion, "expectedVersion is null");
     }
 
-    public VersionResolutionElement getRequestingDependency()
-    {
+    public VersionResolutionElement getRequestingDependency() {
         return requestingDependency;
     }
 
-    public ComparableVersion getExpectedVersion()
-    {
+    public ComparableVersion getExpectedVersion() {
         return expectedVersion;
     }
 
-    public void conflict()
-    {
+    public void conflict() {
         requestingDependency.conflict();
     }
 
     @Override
-    public boolean equals(final Object o)
-    {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
@@ -83,19 +78,17 @@ public final class VersionResolution
             return false;
         }
         final VersionResolution that = (VersionResolution) o;
-        return requestingDependency.equals(that.requestingDependency) &&
-                expectedVersion.equals(that.expectedVersion);
+        return requestingDependency.equals(that.requestingDependency)
+                && expectedVersion.equals(that.expectedVersion);
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return Objects.hash(requestingDependency, expectedVersion);
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("requestingDependency", requestingDependency)
                 .add("expectedVersion", expectedVersion)

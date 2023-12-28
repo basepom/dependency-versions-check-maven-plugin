@@ -11,32 +11,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.basepom.mojo.dvc.strategy;
 
-import org.apache.maven.artifact.versioning.ComparableVersion;
+package org.basepom.mojo.dvc.strategy;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.maven.artifact.versioning.ComparableVersion;
+
 /**
- * This is the default versioning strategy used by previous versions of the plugin.
- * It assumes that all smaller versions are compatible when replaced with larger numbers and compares version
- * elements from left to right. E.g. 3.2.1 &gt; 3.2 and 2.1.1 &gt; 1.0. Usually works pretty ok.
+ * This is the default versioning strategy used by previous versions of the plugin. It assumes that all smaller versions are compatible when replaced with
+ * larger numbers and compares version elements from left to right. E.g. 3.2.1 &gt; 3.2 and 2.1.1 &gt; 1.0. Usually works pretty ok.
  */
 @Named("default")
 @Singleton
 public class DefaultVersionStrategy
-        implements Strategy
-{
+        implements Strategy {
+
     @Override
-    public String getName()
-    {
+    public String getName() {
         return "default";
     }
 
     @Override
-    public final boolean isCompatible(final ComparableVersion expectedVersion, final ComparableVersion resolvedVersion)
-    {
+    public final boolean isCompatible(final ComparableVersion expectedVersion, final ComparableVersion resolvedVersion) {
         // this is the same as converting the versions to the DefaultArtifactVersion and then do compareTo, as this
         // uses ComparableVersion under the hood.
         return resolvedVersion.compareTo(expectedVersion) >= 0;

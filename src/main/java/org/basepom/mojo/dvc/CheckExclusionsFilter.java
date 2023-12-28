@@ -11,33 +11,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 
 import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.Exclusion;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
 public final class CheckExclusionsFilter
-        implements DependencyFilter
-{
+        implements DependencyFilter {
+
     private final List<Exclusion> exclusions;
 
-    public CheckExclusionsFilter(final Collection<Exclusion> exclusions)
-    {
+    public CheckExclusionsFilter(final Collection<Exclusion> exclusions) {
         this.exclusions = ImmutableList.copyOf(checkNotNull(exclusions, "exclusions is null"));
     }
 
     @Override
     @SuppressWarnings("PMD.AvoidBranchingStatementAsLastInLoop")
-    public boolean accept(final DependencyNode node, final List<DependencyNode> parents)
-    {
+    public boolean accept(final DependencyNode node, final List<DependencyNode> parents) {
         checkNotNull(node, "node is null");
         for (final Exclusion exclusion : exclusions) {
             // drop wildcards.

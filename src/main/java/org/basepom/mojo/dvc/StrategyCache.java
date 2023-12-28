@@ -11,11 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.ImmutableMap;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import org.basepom.mojo.dvc.model.ResolverDefinition;
 import org.basepom.mojo.dvc.strategy.Strategy;
 import org.basepom.mojo.dvc.strategy.StrategyProvider;
@@ -24,11 +25,12 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableMap;
 
-public final class StrategyCache
-{
+public final class StrategyCache {
+
     /**
      * name of an artifact to  version resolution strategy.
      */
@@ -37,8 +39,7 @@ public final class StrategyCache
     private final ImmutableMap<QualifiedNameMatcher, Strategy> resolverPatterns;
     private final Strategy defaultStrategy;
 
-    StrategyCache(final StrategyProvider strategyProvider, final ResolverDefinition[] resolvers, final String defaultStrategyName)
-    {
+    StrategyCache(final StrategyProvider strategyProvider, final ResolverDefinition[] resolvers, final String defaultStrategyName) {
         checkNotNull(strategyProvider, "strategyProvider is null");
         checkNotNull(resolvers, "resolvers is null");
         checkNotNull(defaultStrategyName, "defaultStrategyName is null");
@@ -55,8 +56,7 @@ public final class StrategyCache
         this.resolverPatterns = builder.build();
     }
 
-    public Strategy forQualifiedName(final QualifiedName name)
-    {
+    public Strategy forQualifiedName(final QualifiedName name) {
         checkNotNull(name, "name is null");
         try {
             return resolverCache.get(name, () -> {
@@ -67,8 +67,7 @@ public final class StrategyCache
                 }
                 return defaultStrategy;
             });
-        }
-        catch (ExecutionException e) {
+        } catch (ExecutionException e) {
             // ignore, never happens.
             return defaultStrategy;
         }

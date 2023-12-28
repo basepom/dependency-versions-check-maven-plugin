@@ -11,7 +11,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
+import org.basepom.mojo.dvc.dependency.DependencyMap;
+import org.basepom.mojo.dvc.dependency.DependencyMapBuilder;
+import org.basepom.mojo.dvc.dependency.DependencyTreeResolver;
+import org.basepom.mojo.dvc.model.ResolverDefinition;
+import org.basepom.mojo.dvc.model.VersionCheckExcludes;
+import org.basepom.mojo.dvc.strategy.StrategyProvider;
+import org.basepom.mojo.dvc.version.VersionResolutionCollection;
+
+import java.util.Arrays;
+import java.util.List;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -28,13 +43,6 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuilder;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.ProjectDependenciesResolver;
-import org.basepom.mojo.dvc.dependency.DependencyMap;
-import org.basepom.mojo.dvc.dependency.DependencyMapBuilder;
-import org.basepom.mojo.dvc.dependency.DependencyTreeResolver;
-import org.basepom.mojo.dvc.model.ResolverDefinition;
-import org.basepom.mojo.dvc.model.VersionCheckExcludes;
-import org.basepom.mojo.dvc.strategy.StrategyProvider;
-import org.basepom.mojo.dvc.version.VersionResolutionCollection;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -43,19 +51,13 @@ import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.graph.version.SnapshotVersionFilter;
 
-import java.util.Arrays;
-import java.util.List;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-
 /**
  * Base code for all the mojos. Contains the dependency resolvers and the common options.
  */
 public abstract class AbstractDependencyVersionsMojo
         extends AbstractMojo
-        implements Context
-{
+        implements Context {
+
     private static final ImmutableSet<String> VALID_SCOPES = ImmutableSet.of(
             ScopeLimitingFilter.COMPILE_PLUS_RUNTIME,
             JavaScopes.COMPILE,
@@ -83,15 +85,13 @@ public abstract class AbstractDependencyVersionsMojo
     public RepositorySystem repositorySystem;
 
     /**
-     * The strategy provider. This can be requested by other pieces to add
-     * additional strategies.
+     * The strategy provider. This can be requested by other pieces to add additional strategies.
      */
     @Component
     public StrategyProvider strategyProvider;
 
     /**
-     * List of version checks that will be removed from the version
-     * check. This allows potential conflicts to be excluded.
+     * List of version checks that will be removed from the version check. This allows potential conflicts to be excluded.
      * <br>
      * <pre>
      * &lt;exclusions&gt;
@@ -103,11 +103,8 @@ public abstract class AbstractDependencyVersionsMojo
      * &lt;/exclusions&gt;
      * </pre>
      * <p>
-     * Each
-     * element consists of a dependency pattern <code>[groupId]:[artifactId]</code>
-     * that supports wildcards and an expected version (which is the
-     * version is expected by the artifact) and a resolved version (the
-     * version that the dependency resolution has chosen).
+     * Each element consists of a dependency pattern <code>[groupId]:[artifactId]</code> that supports wildcards and an expected version (which is the version
+     * is expected by the artifact) and a resolved version (the version that the dependency resolution has chosen).
      * </p>
      */
     @Parameter(alias = "exceptions")
@@ -120,8 +117,7 @@ public abstract class AbstractDependencyVersionsMojo
     public boolean skip = false;
 
     /**
-     * Include POM projects when running on a multi-module project. Dependency
-     * resolution on a pom project almost never makes sense as it does not actually
+     * Include POM projects when running on a multi-module project. Dependency resolution on a pom project almost never makes sense as it does not actually
      * build any artifacts.
      *
      * @since 3.0.0
@@ -138,8 +134,7 @@ public abstract class AbstractDependencyVersionsMojo
     public boolean quiet = false;
 
     /**
-     * Dependency resolution scope. Defaults to <code>test</code>. Valid
-     * choices are <code>compile+runtime</code>, <code>compile</code>,
+     * Dependency resolution scope. Defaults to <code>test</code>. Valid choices are <code>compile+runtime</code>, <code>compile</code>,
      * <code>test</code> and <code>runtime</code>.
      *
      * @since 3.0.0
@@ -148,8 +143,8 @@ public abstract class AbstractDependencyVersionsMojo
     public String scope = JavaScopes.TEST;
 
     /**
-     * Use deep scan or regular scan. Deep scan looks at all dependencies in the dependency tree, while
-     * regular scan only looks one level deep into the direct dependencies.
+     * Use deep scan or regular scan. Deep scan looks at all dependencies in the dependency tree, while regular scan only looks one level deep into the direct
+     * dependencies.
      *
      * @since 3.0.0
      */
@@ -173,10 +168,8 @@ public abstract class AbstractDependencyVersionsMojo
     public boolean managedOnly = false;
 
     /**
-     * Run dependency resolution in parallel with multiple
-     * threads. Should only ever set to <code>false</code> if the plugin
-     * shows stability problems when resolving dependencies. Please <a
-     * href="issue-management.html">file a bug</a> in that case, too.
+     * Run dependency resolution in parallel with multiple threads. Should only ever set to <code>false</code> if the plugin shows stability problems when
+     * resolving dependencies. Please <a href="issue-management.html">file a bug</a> in that case, too.
      *
      * @since 3.0.0
      */
@@ -184,12 +177,11 @@ public abstract class AbstractDependencyVersionsMojo
     public boolean fastResolution = true;
 
     /**
-     * Fail the build if an artifact in <code>system</code> scope can not be resolved. Those are notoriously dependent on
-     * the local build environment and some outright fail (e.g. referencing the <code>tools.jar</code>, which no longer exists in a JDK8+ environment).
+     * Fail the build if an artifact in <code>system</code> scope can not be resolved. Those are notoriously dependent on the local build environment and some
+     * outright fail (e.g. referencing the <code>tools.jar</code>, which no longer exists in a JDK8+ environment).
      * <br>
-     * Setting this flag to <code>true</code> will fail the build if any <code>system</code> scoped artifact
-     * can not be resolved. This is almost never desired, except when building a project with a direct <code>system</code> scoped
-     * dependency.
+     * Setting this flag to <code>true</code> will fail the build if any <code>system</code> scoped artifact can not be resolved. This is almost never desired,
+     * except when building a project with a direct <code>system</code> scoped dependency.
      *
      * @since 3.0.0
      */
@@ -197,9 +189,8 @@ public abstract class AbstractDependencyVersionsMojo
     protected boolean unresolvedSystemArtifactsFailBuild = false;
 
     /**
-     * Require all optional dependencies to exist and fail the build if any optional dependency can not resolved. This is almost never
-     * needed and actually causes problems for some projects that use large public dependencies from central that in turn pull in
-     * non-public dependencies as optional.
+     * Require all optional dependencies to exist and fail the build if any optional dependency can not resolved. This is almost never needed and actually
+     * causes problems for some projects that use large public dependencies from central that in turn pull in non-public dependencies as optional.
      *
      * @since 3.2.0
      */
@@ -220,23 +211,21 @@ public abstract class AbstractDependencyVersionsMojo
      *   &lt;resolver&gt;
      * &lt;resolvers&gt;
      * </pre>
-     *
-     * A resolver maps a specific strategy to a list of includes.
-     * The include syntax is <code>[group-id]:[artifact-id]</code> where each pattern segment
+     * <p>
+     * A resolver maps a specific strategy to a list of includes. The include syntax is <code>[group-id]:[artifact-id]</code> where each pattern segment
      * supports full and partial wildcards (<code>*</code>).
      * <br>
-     * The plugin includes some default strategies: <code>apr</code>, <code>default</code>, <code>single-digit</code> and <code>two-digits-backward-compatible</code>.
-     * Additional strategies can be defined and added to the plugin classpath.
+     * The plugin includes some default strategies: <code>apr</code>, <code>default</code>, <code>single-digit</code> and
+     * <code>two-digits-backward-compatible</code>. Additional strategies can be defined and added to the plugin classpath.
      */
     @Parameter
     public ResolverDefinition[] resolvers = new ResolverDefinition[0];
 
     /**
      * Sets the default strategy to use to evaluate whether two dependency versions are compatible or not.
-     *
-     * The <code>default</code> resolution strategy matches the Maven
-     * dependency resolution itself; any two dependencies that maven
-     * considers compatible will be accepted.
+     * <p>
+     * The <code>default</code> resolution strategy matches the Maven dependency resolution itself; any two dependencies that maven considers compatible will be
+     * accepted.
      *
      * @since 3.0.0
      */
@@ -249,8 +238,7 @@ public abstract class AbstractDependencyVersionsMojo
     @Override
     @SuppressWarnings("PMD.AvoidRethrowingException")
     public void execute()
-            throws MojoExecutionException, MojoFailureException
-    {
+            throws MojoExecutionException, MojoFailureException {
         try {
             for (VersionCheckExcludes exclusion : exclusions) {
                 checkState(exclusion.isValid(), "Invalid exclusion specification: '%s'", exclusion);
@@ -274,22 +262,19 @@ public abstract class AbstractDependencyVersionsMojo
             this.snapshotFilteredSession = new DefaultRepositorySystemSession(mavenSession.getRepositorySession())
                     .setVersionFilter(new SnapshotVersionFilter());
 
-
             final ScopeLimitingFilter scopeFilter = createScopeFilter();
             final DependencyMap rootDependencyMap = new DependencyMapBuilder(this).mapProject(project, scopeFilter);
 
             try (DependencyTreeResolver dependencyTreeResolver = new DependencyTreeResolver(this, rootDependencyMap)) {
-                final ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> resolutionMap = dependencyTreeResolver.computeResolutionMap(project, scopeFilter);
+                final ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> resolutionMap = dependencyTreeResolver.computeResolutionMap(project,
+                        scopeFilter);
                 doExecute(resolutionMap, rootDependencyMap);
             }
-        }
-        catch (MojoExecutionException | MojoFailureException e) {
+        } catch (MojoExecutionException | MojoFailureException e) {
             throw e;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new MojoExecutionException("While running mojo: ", e);
-        }
-        finally {
+        } finally {
             log.debug("Ended %s mojo run!", this.getClass().getSimpleName());
         }
     }
@@ -297,106 +282,93 @@ public abstract class AbstractDependencyVersionsMojo
     /**
      * Subclasses need to implement this method.
      *
-     * @param resolutionMap The prebuilt resolution map from qualified names to version resolution collections.
+     * @param resolutionMap     The prebuilt resolution map from qualified names to version resolution collections.
      * @param rootDependencyMap The prebuilt dependency map for all the root dependencies.
-     *
      * @throws Exception When an execution error occurs.
      */
     protected abstract void doExecute(ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> resolutionMap, DependencyMap rootDependencyMap)
             throws Exception;
 
     /**
-     * Defines the scope used to resolve the project dependencies. The project dependencies will be limited to the dependencies that match this
-     * filter. The list mojo overrides this to limit the scope in which dependencies are listed. By default, include everything.
+     * Defines the scope used to resolve the project dependencies. The project dependencies will be limited to the dependencies that match this filter. The list
+     * mojo overrides this to limit the scope in which dependencies are listed. By default, include everything.
      *
      * @return The {@link ScopeLimitingFilter} instance for the project dependencies.
      */
-    protected ScopeLimitingFilter createScopeFilter()
-    {
+    protected ScopeLimitingFilter createScopeFilter() {
         return ScopeLimitingFilter.computeDependencyScope(scope);
     }
 
     @Override
-    public boolean useFastResolution()
-    {
+    public boolean useFastResolution() {
         return fastResolution;
     }
 
     @Override
-    public boolean useDeepScan()
-    {
+    public boolean useDeepScan() {
         return deepScan;
     }
 
     @Override
-    public boolean isOptionalDependenciesMustExist()
-    {
+    public boolean isOptionalDependenciesMustExist() {
         return optionalDependenciesMustExist;
     }
 
     @Override
-    public StrategyCache getStrategyCache()
-    {
+    public StrategyCache getStrategyCache() {
         return strategyCache;
     }
 
     @Override
-    public ProjectBuilder getProjectBuilder()
-    {
+    public ProjectBuilder getProjectBuilder() {
         return mavenProjectBuilder;
     }
 
     @Override
-    public ProjectDependenciesResolver getProjectDependenciesResolver()
-    {
+    public ProjectDependenciesResolver getProjectDependenciesResolver() {
         return projectDependenciesResolver;
     }
 
     @Override
-    public MavenProject getRootProject()
-    {
+    public MavenProject getRootProject() {
         return project;
     }
 
     @Override
-    public List<MavenProject> getReactorProjects()
-    {
+    public List<MavenProject> getReactorProjects() {
         return ImmutableList.copyOf(reactorProjects);
     }
 
     @Override
-    public RepositorySystemSession getRepositorySystemSession()
-    {
+    public RepositorySystemSession getRepositorySystemSession() {
         return snapshotFilteredSession;
     }
 
     @Override
-    public RepositorySystem getRepositorySystem() { return repositorySystem; }
+    public RepositorySystem getRepositorySystem() {
+        return repositorySystem;
+    }
 
     @Override
-    public ProjectBuildingRequest createProjectBuildingRequest()
-    {
+    public ProjectBuildingRequest createProjectBuildingRequest() {
         DefaultProjectBuildingRequest buildingRequest = new DefaultProjectBuildingRequest(mavenSession.getProjectBuildingRequest());
         buildingRequest.setRemoteRepositories(project.getRemoteArtifactRepositories());
         return buildingRequest;
     }
 
     @Override
-    public VersionRangeRequest createVersionRangeRequest(Artifact artifact)
-    {
+    public VersionRangeRequest createVersionRangeRequest(Artifact artifact) {
         checkNotNull(artifact, "artifact is null");
         return new VersionRangeRequest(artifact, project.getRemoteProjectRepositories(), "");
     }
 
     @Override
-    public List<VersionCheckExcludes> getExclusions()
-    {
+    public List<VersionCheckExcludes> getExclusions() {
         return Arrays.asList(exclusions);
     }
 
     @Override
-    public boolean isUnresolvedSystemArtifactsFailBuild()
-    {
+    public boolean isUnresolvedSystemArtifactsFailBuild() {
         return unresolvedSystemArtifactsFailBuild;
     }
 }

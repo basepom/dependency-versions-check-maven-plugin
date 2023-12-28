@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc.strategy;
 
 import org.apache.maven.artifact.versioning.ComparableVersion;
@@ -18,8 +19,8 @@ import org.apache.maven.artifact.versioning.ComparableVersion;
 /**
  * A strategy implementation decides whether two versions are compatible with each other.
  */
-public interface Strategy
-{
+public interface Strategy {
+
     /**
      * @return The name of the strategy.
      */

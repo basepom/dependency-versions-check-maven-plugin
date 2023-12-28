@@ -11,32 +11,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc.model;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import org.basepom.mojo.dvc.QualifiedNameMatcher;
 
 import java.util.Objects;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Represents a "resolver" element in the configuration section.
  */
-public final class ResolverDefinition
-{
+public final class ResolverDefinition {
+
     private String strategy = "";
     private ImmutableList<QualifiedNameMatcher> includes = ImmutableList.of();
 
-    public void setStrategy(final String strategy)
-    {
+    public void setStrategy(final String strategy) {
         this.strategy = checkNotNull(strategy, "strategyName is null");
     }
 
     @SuppressWarnings("PMD.UseVarargs") // called by maven, don't use varargs
-    public void setIncludes(final String[] includes)
-    {
+    public void setIncludes(final String[] includes) {
         checkNotNull(includes, "includes is null");
 
         ImmutableList.Builder<QualifiedNameMatcher> builder = ImmutableList.builder();
@@ -46,19 +46,16 @@ public final class ResolverDefinition
         this.includes = builder.build();
     }
 
-    public String getStrategy()
-    {
+    public String getStrategy() {
         return strategy;
     }
 
-    public ImmutableList<QualifiedNameMatcher> getIncludes()
-    {
+    public ImmutableList<QualifiedNameMatcher> getIncludes() {
         return includes;
     }
 
     @Override
-    public boolean equals(final Object o)
-    {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
@@ -66,19 +63,17 @@ public final class ResolverDefinition
             return false;
         }
         ResolverDefinition that = (ResolverDefinition) o;
-        return strategy.equals(that.strategy) &&
-                includes.equals(that.includes);
+        return strategy.equals(that.strategy)
+                && includes.equals(that.includes);
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return Objects.hash(strategy, includes);
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("strategy", strategy)
                 .add("includes", includes)

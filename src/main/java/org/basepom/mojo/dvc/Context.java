@@ -11,22 +11,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc;
+
+import org.basepom.mojo.dvc.model.VersionCheckExcludes;
+
+import java.util.List;
 
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuilder;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.ProjectDependenciesResolver;
-import org.basepom.mojo.dvc.model.VersionCheckExcludes;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 
-import java.util.List;
+public interface Context {
 
-public interface Context
-{
     /**
      * @return True if any unresolved system artifacts should fail the build.
      */
@@ -94,7 +96,6 @@ public interface Context
 
     /**
      * @param artifact The artifact to define the version range resolution request.
-     *
      * @return A version range resolution request.
      */
     VersionRangeRequest createVersionRangeRequest(Artifact artifact);

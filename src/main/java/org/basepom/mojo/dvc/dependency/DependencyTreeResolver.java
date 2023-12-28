@@ -11,7 +11,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc.dependency;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static java.lang.String.format;
+import static org.basepom.mojo.dvc.dependency.DependencyMapBuilder.convertToPomArtifact;
+
+import org.basepom.mojo.dvc.CheckExclusionsFilter;
+import org.basepom.mojo.dvc.Context;
+import org.basepom.mojo.dvc.PluginLog;
+import org.basepom.mojo.dvc.QualifiedName;
+import org.basepom.mojo.dvc.ScopeLimitingFilter;
+import org.basepom.mojo.dvc.strategy.Strategy;
+import org.basepom.mojo.dvc.version.VersionResolution;
+import org.basepom.mojo.dvc.version.VersionResolutionCollection;
+
+import java.time.Duration;
+import java.util.Collection;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -29,14 +53,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingException;
-import org.basepom.mojo.dvc.CheckExclusionsFilter;
-import org.basepom.mojo.dvc.Context;
-import org.basepom.mojo.dvc.PluginLog;
-import org.basepom.mojo.dvc.QualifiedName;
-import org.basepom.mojo.dvc.ScopeLimitingFilter;
-import org.basepom.mojo.dvc.strategy.Strategy;
-import org.basepom.mojo.dvc.version.VersionResolution;
-import org.basepom.mojo.dvc.version.VersionResolutionCollection;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
@@ -48,23 +64,9 @@ import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.util.filter.AndDependencyFilter;
 
-import java.time.Duration;
-import java.util.Collection;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
-import static java.lang.String.format;
-import static org.basepom.mojo.dvc.dependency.DependencyMapBuilder.convertToPomArtifact;
-
 public final class DependencyTreeResolver
-        implements AutoCloseable
-{
+        implements AutoCloseable {
+
     private static final PluginLog LOG = new PluginLog(DependencyTreeResolver.class);
 
     private static final int DEPENDENCY_RESOLUTION_NUM_THREADS = Runtime.getRuntime().availableProcessors() * 5;
@@ -75,32 +77,30 @@ public final class DependencyTreeResolver
     private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(DEPENDENCY_RESOLUTION_NUM_THREADS,
             new ThreadFactoryBuilder().setNameFormat("dependency-version-check-worker-%s").setDaemon(true).build()));
 
-    public DependencyTreeResolver(final Context context, final DependencyMap rootDependencyMap)
-    {
+    public DependencyTreeResolver(final Context context, final DependencyMap rootDependencyMap) {
         this.context = checkNotNull(context, "context is null");
         this.rootDependencyMap = checkNotNull(rootDependencyMap, "rootDependencyMap is null");
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         MoreExecutors.shutdownAndAwaitTermination(executorService, Duration.ofSeconds(2));
     }
 
     /**
-     * Creates a map of all dependency version resolutions used in this project in a given scope. The result is a map from names to a list of version numbers used in the project, based on the element
-     * requesting the version.
+     * Creates a map of all dependency version resolutions used in this project in a given scope. The result is a map from names to a list of version numbers
+     * used in the project, based on the element requesting the version.
      * <p>
      * If the special scope "null" is used, a superset of all scopes is used (this is used by the check mojo).
      *
-     * @param project The maven project to resolve all dependencies for.
+     * @param project     The maven project to resolve all dependencies for.
      * @param scopeFilter Limits the scopes to resolve.
      * @return Map from qualified names to possible version resolutions.
      * @throws MojoExecutionException Parallel dependency resolution failed.
      */
-    public ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> computeResolutionMap(final MavenProject project, final ScopeLimitingFilter scopeFilter)
-            throws MojoExecutionException
-    {
+    public ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> computeResolutionMap(final MavenProject project,
+            final ScopeLimitingFilter scopeFilter)
+            throws MojoExecutionException {
         checkNotNull(project, "project is null");
         checkNotNull(scopeFilter, "scope is null");
 
@@ -114,12 +114,13 @@ public final class DependencyTreeResolver
         final ImmutableList<Dependency> dependencies;
         if (context.useDeepScan()) {
             LOG.debug("Running deep scan");
-            dependencies = ImmutableList.copyOf(rootDependencyMap.getAllDependencies().values().stream().map(DependencyNode::getDependency).collect(toImmutableList()));
-        }
-        else {
+            dependencies = ImmutableList.copyOf(
+                    rootDependencyMap.getAllDependencies().values().stream().map(DependencyNode::getDependency).collect(toImmutableList()));
+        } else {
             final ArtifactTypeRegistry stereotypes = context.getRepositorySystemSession().getArtifactTypeRegistry();
 
-            dependencies = ImmutableList.copyOf(project.getDependencies().stream().map(d -> RepositoryUtils.toDependency(d, stereotypes)).collect(toImmutableList()));
+            dependencies = ImmutableList.copyOf(
+                    project.getDependencies().stream().map(d -> RepositoryUtils.toDependency(d, stereotypes)).collect(toImmutableList()));
         }
 
         final ImmutableSet.Builder<Throwable> throwableBuilder = ImmutableSet.builder();
@@ -137,21 +138,17 @@ public final class DependencyTreeResolver
             for (final ListenableFuture<?> future : futures) {
                 try {
                     future.get();
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                }
-                catch (ExecutionException e) {
+                } catch (ExecutionException e) {
                     throwableBuilder.add(e.getCause());
                 }
             }
-        }
-        else {
+        } else {
             for (final Dependency dependency : dependencies) {
                 try {
                     resolveProjectDependency(dependency, scopeFilter, collector);
-                }
-                catch (Throwable t) {
+                } catch (Throwable t) {
                     throwableBuilder.add(t);
                 }
             }
@@ -165,16 +162,14 @@ public final class DependencyTreeResolver
         return VersionResolutionCollection.toResolutionMap(collector.build());
     }
 
-    private static MojoExecutionException processResolveProjectDependencyException(Set<Throwable> throwables)
-    {
+    private static MojoExecutionException processResolveProjectDependencyException(Set<Throwable> throwables) {
         ImmutableSet.Builder<String> failedDependenciesBuilder = ImmutableSet.builder();
         ImmutableSet.Builder<String> messageBuilder = ImmutableSet.builder();
         for (Throwable t : throwables) {
             if (t instanceof DependencyResolutionException) {
                 ((DependencyResolutionException) t).getResult().getUnresolvedDependencies()
                         .forEach(d -> failedDependenciesBuilder.add(printDependency(d)));
-            }
-            else {
+            } else {
                 messageBuilder.add(t.getMessage());
             }
         }
@@ -190,8 +185,7 @@ public final class DependencyTreeResolver
         return new MojoExecutionException(message);
     }
 
-    private static String printDependency(Dependency d)
-    {
+    private static String printDependency(Dependency d) {
         return d.getArtifact() + " [" + d.getScope() + (d.isOptional() ? ", optional" : "") + "]";
     }
 
@@ -202,8 +196,7 @@ public final class DependencyTreeResolver
     private void resolveProjectDependency(final Dependency dependency,
             final ScopeLimitingFilter visibleScopes,
             final ImmutableSetMultimap.Builder<QualifiedName, VersionResolution> collector)
-            throws MojoExecutionException, DependencyResolutionException, AbstractArtifactResolutionException, VersionRangeResolutionException
-    {
+            throws MojoExecutionException, DependencyResolutionException, AbstractArtifactResolutionException, VersionRangeResolutionException {
         final QualifiedName dependencyName = QualifiedName.fromDependency(dependency);
 
         // see if the resolved, direct dependency contain this name.
@@ -214,7 +207,8 @@ public final class DependencyTreeResolver
             final DependencyNode projectDependencyNode = rootDependencyMap.getDirectDependencies().get(dependencyName);
             assert projectDependencyNode != null;
 
-            checkState(visibleScopes.accept(projectDependencyNode, ImmutableList.of()), "Dependency %s maps to %s, but scope filter would exclude it. This should never happen!", dependency, projectDependencyNode);
+            checkState(visibleScopes.accept(projectDependencyNode, ImmutableList.of()),
+                    "Dependency %s maps to %s, but scope filter would exclude it. This should never happen!", dependency, projectDependencyNode);
             computeVersionResolutionForDirectDependency(collector, dependency, projectDependencyNode);
         }
 
@@ -225,25 +219,23 @@ public final class DependencyTreeResolver
         if (projectDependencyNode == null) {
             return;
         }
-        checkState(visibleScopes.accept(projectDependencyNode, ImmutableList.of()), "Dependency %s maps to %s, but scope filter would exclude it. This should never happen!", dependency, projectDependencyNode);
+        checkState(visibleScopes.accept(projectDependencyNode, ImmutableList.of()),
+                "Dependency %s maps to %s, but scope filter would exclude it. This should never happen!", dependency, projectDependencyNode);
 
         try {
             // remove the test scope for resolving all the transitive dependencies. Anything that was pulled in in test scope,
             // now needs its dependencies resolved in compile+runtime scope, not test scope.
             final ScopeLimitingFilter dependencyScope = ScopeLimitingFilter.computeTransitiveScope(dependency.getScope());
             computeVersionResolutionForTransitiveDependencies(collector, dependency, projectDependencyNode, dependencyScope);
-        }
-        catch (ProjectBuildingException e) {
+        } catch (ProjectBuildingException e) {
             // This is an optimization and a bug workaround at the same time. Some artifacts exist that
             // specify a packaging that is not natively supported by maven (e.g. bundle of OSGi bundles), however they
             // do not bring the necessary extensions to deal with that type. As a result, this causes a "could not read model"
             // exception. Ignore the transitive dependencies if the project node does not suggest any child artifacts.
             if (projectDependencyNode.getChildren().isEmpty()) {
                 LOG.debug("Ignoring model building exception for %s, no children were declared", dependency);
-            }
-            else {
+            } else {
                 LOG.warn("Could not read POM for %s, ignoring project and its dependencies!", dependency);
-//                throw e;
             }
         }
     }
@@ -255,8 +247,7 @@ public final class DependencyTreeResolver
             final ImmutableSetMultimap.Builder<QualifiedName, VersionResolution> collector,
             final Dependency requestingDependency,
             final DependencyNode resolvedDependencyNode)
-            throws AbstractArtifactResolutionException, VersionRangeResolutionException, MojoExecutionException
-    {
+            throws AbstractArtifactResolutionException, VersionRangeResolutionException, MojoExecutionException {
         final QualifiedName requestingDependencyName = QualifiedName.fromDependency(requestingDependency);
 
         final RepositorySystem repoSystem = context.getRepositorySystem();
@@ -272,8 +263,9 @@ public final class DependencyTreeResolver
         final VersionRangeResult result = repoSystem.resolveVersionRange(context.getRepositorySystemSession(), request);
 
         if (!result.getVersions().contains(resolvedDependencyNode.getVersion())) {
-            throw new MojoExecutionException(format("Cannot determine the recommended version of dependency '%s'; its version specification is '%s', and the resolved version is '%s'.",
-                    requestingDependency, requestingDependency.getArtifact().getBaseVersion(), resolvedDependencyNode.getVersion()));
+            throw new MojoExecutionException(
+                    format("Cannot determine the recommended version of dependency '%s'; its version specification is '%s', and the resolved version is '%s'.",
+                            requestingDependency, requestingDependency.getArtifact().getBaseVersion(), resolvedDependencyNode.getVersion()));
         }
 
         // dependency range contains the project version (or matches it)
@@ -283,7 +275,8 @@ public final class DependencyTreeResolver
 
         // this is a direct dependency; it made it through the filter in resolveProjectDependency.
         final boolean managedDependency = (resolvedDependencyNode.getManagedBits() & DependencyNode.MANAGED_VERSION) != 0;
-        final VersionResolution resolution = VersionResolution.forDirectDependency(QualifiedName.fromProject(context.getRootProject()), expectedVersion, managedDependency);
+        final VersionResolution resolution = VersionResolution.forDirectDependency(QualifiedName.fromProject(context.getRootProject()), expectedVersion,
+                managedDependency);
 
         if (isIncluded(resolvedDependencyNode, expectedVersion, expectedVersion)) {
             final Strategy strategy = context.getStrategyCache().forQualifiedName(requestingDependencyName);
@@ -292,8 +285,7 @@ public final class DependencyTreeResolver
             if (!strategy.isCompatible(expectedVersion, expectedVersion)) {
                 resolution.conflict();
             }
-        }
-        else {
+        } else {
             LOG.debug("VersionResolution %s is excluded by configuration.", resolution);
         }
 
@@ -303,16 +295,15 @@ public final class DependencyTreeResolver
     }
 
     /**
-     * Resolve all transitive dependencies relative to a given dependency, based off the artifact given. A scope filter can be added which limits the
-     * results to the scopes present in that filter.
+     * Resolve all transitive dependencies relative to a given dependency, based off the artifact given. A scope filter can be added which limits the results to
+     * the scopes present in that filter.
      */
     private void computeVersionResolutionForTransitiveDependencies(
             final ImmutableSetMultimap.Builder<QualifiedName, VersionResolution> collector,
             final Dependency requestingDependency,
             final DependencyNode dependencyNodeForDependency,
             final DependencyFilter scopeFilter)
-            throws AbstractArtifactResolutionException, ProjectBuildingException, DependencyResolutionException
-    {
+            throws AbstractArtifactResolutionException, ProjectBuildingException, DependencyResolutionException {
         final AndDependencyFilter filter = new AndDependencyFilter(scopeFilter, new CheckExclusionsFilter(requestingDependency.getExclusions()));
 
         final DependencyMap dependencyMap = new DependencyMapBuilder(context).mapDependency(dependencyNodeForDependency, filter);
@@ -368,8 +359,7 @@ public final class DependencyTreeResolver
     /**
      * Returns true if a given artifact and version should be checked.
      */
-    private boolean isIncluded(DependencyNode dependencyNodeForDependency, ComparableVersion expectedVersion, ComparableVersion resolvedVersion)
-    {
+    private boolean isIncluded(DependencyNode dependencyNodeForDependency, ComparableVersion expectedVersion, ComparableVersion resolvedVersion) {
         return context.getExclusions().stream().noneMatch(exclusion -> exclusion.matches(dependencyNodeForDependency, expectedVersion, resolvedVersion));
     }
 
@@ -377,8 +367,7 @@ public final class DependencyTreeResolver
      * Return a version object for an Artifact.
      */
     private static ComparableVersion getVersion(DependencyNode dependencyNode)
-            throws OverConstrainedVersionException
-    {
+            throws OverConstrainedVersionException {
         checkNotNull(dependencyNode, "dependencyNode is null");
 
         checkState(dependencyNode.getVersion() != null, "DependencyNode %s has a null version selected. Please report a bug!", dependencyNode);

@@ -11,7 +11,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc.dependency;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
+import org.basepom.mojo.dvc.Context;
+import org.basepom.mojo.dvc.PluginLog;
+import org.basepom.mojo.dvc.QualifiedName;
+
+import java.util.Objects;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -25,9 +35,6 @@ import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingException;
 import org.apache.maven.project.ProjectBuildingResult;
-import org.basepom.mojo.dvc.Context;
-import org.basepom.mojo.dvc.PluginLog;
-import org.basepom.mojo.dvc.QualifiedName;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
@@ -38,44 +45,37 @@ import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 import org.eclipse.aether.util.artifact.JavaScopes;
 
-import java.util.Objects;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
-
 /**
  * Builds a map of dependencies required by a specific project or another dependency.
  */
-public final class DependencyMapBuilder
-{
+public final class DependencyMapBuilder {
+
     private static final PluginLog LOG = new PluginLog(DependencyMapBuilder.class);
 
     private final Context context;
 
-    public DependencyMapBuilder(final Context context)
-    {
+    public DependencyMapBuilder(final Context context) {
         this.context = checkNotNull(context, "context is null");
     }
 
     /**
      * Create a map of dependencies for a given dependency node (representing an element on the dependency tree).
      *
-     * @param dependencyNode The dependency node to use.
+     * @param dependencyNode     The dependency node to use.
      * @param projectScopeFilter A scope limiting filter to mask out dependencies out of scope.
      * @return A map of dependencies for this given dependency node.
-     *
      * @throws DependencyResolutionException Dependency resolution failed.
-     * @throws ProjectBuildingException Maven project could not be built.
+     * @throws ProjectBuildingException      Maven project could not be built.
      */
     public DependencyMap mapDependency(final DependencyNode dependencyNode,
             final DependencyFilter projectScopeFilter)
-            throws DependencyResolutionException, ProjectBuildingException
-    {
+            throws DependencyResolutionException, ProjectBuildingException {
         checkNotNull(dependencyNode, "dependencyNode is null");
         checkNotNull(projectScopeFilter, "projectScopeFilter is null");
 
         // build the project
-        final ProjectBuildingResult result = context.getProjectBuilder().build(convertFromAetherDependency(dependencyNode), false, context.createProjectBuildingRequest());
+        final ProjectBuildingResult result = context.getProjectBuilder()
+                .build(convertFromAetherDependency(dependencyNode), false, context.createProjectBuildingRequest());
 
         // now resolve the project representing the dependency.
         final MavenProject project = result.getProject();
@@ -85,17 +85,14 @@ public final class DependencyMapBuilder
     /**
      * Create a map of names to dependencies for a given project.
      *
-     * @param project The current maven project.
+     * @param project     The current maven project.
      * @param scopeFilter A scope limiting filter to mask out dependencies out of scope.
-     *
      * @return A map of dependencies for this given dependency node.
-     *
      * @throws DependencyResolutionException Dependency resolution failed.
      */
     public DependencyMap mapProject(final MavenProject project,
             final DependencyFilter scopeFilter)
-            throws DependencyResolutionException
-    {
+            throws DependencyResolutionException {
         checkNotNull(project, "project is null");
         checkNotNull(scopeFilter, "scopeFilter is null");
 
@@ -108,8 +105,7 @@ public final class DependencyMapBuilder
 
         try {
             result = context.getProjectDependenciesResolver().resolve(request);
-        }
-        catch (DependencyResolutionException e) {
+        } catch (DependencyResolutionException e) {
             result = e.getResult();
             // try to resolve using the reactor projects
             final ImmutableSet<ProjectKey> reactorProjects = context.getReactorProjects().stream()
@@ -147,15 +143,13 @@ public final class DependencyMapBuilder
 
                 if (t instanceof NoRepositoryLayoutException) {
                     repository = ((NoRepositoryLayoutException) t).getRepository();
-                }
-                else if (t instanceof ArtifactTransferException) {
+                } else if (t instanceof ArtifactTransferException) {
                     repository = ((ArtifactTransferException) t).getRepository();
                 }
 
                 if (repository != null && "legacy".equals(repository.getContentType())) {
                     LOG.warn("Could not access a legacy repository for artifacts:  %s; Reason: %s", result.getUnresolvedDependencies(), t.getMessage());
-                }
-                else {
+                } else {
                     throw e;
                 }
             }
@@ -170,8 +164,7 @@ public final class DependencyMapBuilder
 
     private ImmutableMap<QualifiedName, DependencyNode> loadDependencyTree(final DependencyNode node,
             final DependencyFilter filter,
-            final ImmutableMap.Builder<QualifiedName, DependencyNode> allDependencyCollector)
-    {
+            final ImmutableMap.Builder<QualifiedName, DependencyNode> allDependencyCollector) {
         final ImmutableMap.Builder<QualifiedName, DependencyNode> builder = ImmutableMap.builder();
         for (final DependencyNode dependencyNode : node.getChildren()) {
             if (dependencyNode.getManagedBits() != 0) {
@@ -202,8 +195,7 @@ public final class DependencyMapBuilder
         return builder.build();
     }
 
-    static org.apache.maven.artifact.Artifact convertFromAetherDependency(final DependencyNode dependencyNode)
-    {
+    static org.apache.maven.artifact.Artifact convertFromAetherDependency(final DependencyNode dependencyNode) {
         Artifact aetherArtifact = convertToPomArtifact(dependencyNode.getArtifact());
 
         final org.apache.maven.artifact.Artifact mavenArtifact = RepositoryUtils.toArtifact(aetherArtifact);
@@ -223,36 +215,32 @@ public final class DependencyMapBuilder
         return new DefaultArtifact(artifact.getGroupId(), artifact.getArtifactId(), "pom", artifact.getVersion());
     }
 
-    private static final class ProjectKey
-    {
+    private static final class ProjectKey {
+
         private final String groupId;
         private final String artifactId;
         private final String version;
 
-        public static ProjectKey fromProject(final MavenProject project)
-        {
+        public static ProjectKey fromProject(final MavenProject project) {
             checkNotNull(project, "project; is null");
             return new ProjectKey(project.getGroupId(), project.getArtifactId(), project.getVersion());
         }
 
-        public static ProjectKey fromDependency(final Dependency dependency)
-        {
+        public static ProjectKey fromDependency(final Dependency dependency) {
             checkNotNull(dependency, "artifact; is null");
             return new ProjectKey(dependency.getArtifact().getGroupId(),
                     dependency.getArtifact().getArtifactId(),
                     dependency.getArtifact().getVersion());
         }
 
-        private ProjectKey(final String groupId, final String artifactId, final String version)
-        {
+        private ProjectKey(final String groupId, final String artifactId, final String version) {
             this.groupId = checkNotNull(groupId, "groupId is null");
             this.artifactId = checkNotNull(artifactId, "artifactId is null");
             this.version = checkNotNull(version, "version is null");
         }
 
         @Override
-        public boolean equals(Object o)
-        {
+        public boolean equals(Object o) {
             if (this == o) {
                 return true;
             }
@@ -260,14 +248,13 @@ public final class DependencyMapBuilder
                 return false;
             }
             ProjectKey that = (ProjectKey) o;
-            return groupId.equals(that.groupId) &&
-                    artifactId.equals(that.artifactId) &&
-                    version.equals(that.version);
+            return groupId.equals(that.groupId)
+                    && artifactId.equals(that.artifactId)
+                    && version.equals(that.version);
         }
 
         @Override
-        public int hashCode()
-        {
+        public int hashCode() {
             return Objects.hash(groupId, artifactId, version);
         }
     }

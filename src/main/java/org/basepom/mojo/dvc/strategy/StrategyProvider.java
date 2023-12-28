@@ -11,17 +11,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc.strategy;
 
 import com.google.common.collect.ImmutableMap;
 
 /**
- * Gives access to the various strategies. The implementation of this
- * API must collect the Strategies registered in Plexus and return them
- * by name or as list.
+ * Gives access to the various strategies. The implementation of this API must collect the Strategies registered in Plexus and return them by name or as list.
  */
-public interface StrategyProvider
-{
+public interface StrategyProvider {
+
     Strategy forName(String name);
 
     ImmutableMap<String, Strategy> getStrategies();

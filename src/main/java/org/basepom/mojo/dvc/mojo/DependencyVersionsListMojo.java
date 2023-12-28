@@ -11,7 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc.mojo;
+
+import static com.google.common.base.Preconditions.checkState;
+
+import org.basepom.mojo.dvc.AbstractDependencyVersionsMojo;
+import org.basepom.mojo.dvc.QualifiedName;
+import org.basepom.mojo.dvc.dependency.DependencyMap;
+import org.basepom.mojo.dvc.version.VersionResolutionCollection;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -26,14 +34,8 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.shared.utils.logging.MessageBuilder;
 import org.apache.maven.shared.utils.logging.MessageUtils;
-import org.basepom.mojo.dvc.AbstractDependencyVersionsMojo;
-import org.basepom.mojo.dvc.QualifiedName;
-import org.basepom.mojo.dvc.dependency.DependencyMap;
-import org.basepom.mojo.dvc.version.VersionResolutionCollection;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.version.Version;
-
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Resolves all dependencies of a project and lists all versions for any artifact and what version was chosen by the resolver.
@@ -42,8 +44,8 @@ import static com.google.common.base.Preconditions.checkState;
  */
 @Mojo(name = "list", requiresProject = true, threadSafe = true, requiresDependencyResolution = ResolutionScope.NONE, defaultPhase = LifecyclePhase.VERIFY)
 public final class DependencyVersionsListMojo
-        extends AbstractDependencyVersionsMojo
-{
+        extends AbstractDependencyVersionsMojo {
+
     /**
      * List only dependencies in conflict or all dependencies.
      */
@@ -115,11 +117,9 @@ public final class DependencyVersionsListMojo
 
             if (isManaged) {
                 mb.warning(actualVersion);
-            }
-            else if (isDirect) {
+            } else if (isDirect) {
                 mb.strong(actualVersion);
-            }
-            else {
+            } else {
                 mb.a(actualVersion);
             }
 
@@ -135,14 +135,11 @@ public final class DependencyVersionsListMojo
 
                     if (resolution.hasConflict()) {
                         mb.failure("!" + result + "!");
-                    }
-                    else if (resolution.isMatchFor(actualVersion)) {
+                    } else if (resolution.isMatchFor(actualVersion)) {
                         mb.success(result);
-                    }
-                    else if (resolution.hasDirectDependencies()) {
+                    } else if (resolution.hasDirectDependencies()) {
                         mb.strong("*" + result + "*");
-                    }
-                    else {
+                    } else {
                         mb.a(result);
                     }
                     if (it.hasNext()) {

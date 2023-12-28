@@ -11,20 +11,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc;
-
-import org.junit.jupiter.api.Test;
-
-import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class QualifiedNameMatcherTest
-{
+import java.util.regex.Pattern;
+
+import org.junit.jupiter.api.Test;
+
+public class QualifiedNameMatcherTest {
+
     @Test
-    public void testEmpty()
-    {
+    public void testEmpty() {
         Pattern matchEmpty = QualifiedNameMatcher.compileWildcard("");
 
         assertTrue(matchEmpty.matcher("").matches());
@@ -33,8 +33,7 @@ public class QualifiedNameMatcherTest
     }
 
     @Test
-    public void testWildcard()
-    {
+    public void testWildcard() {
         Pattern matchWildcard = QualifiedNameMatcher.compileWildcard("*");
 
         assertTrue(matchWildcard.matcher("").matches());
@@ -43,8 +42,7 @@ public class QualifiedNameMatcherTest
     }
 
     @Test
-    public void testTailWildcard()
-    {
+    public void testTailWildcard() {
         Pattern matchTail = QualifiedNameMatcher.compileWildcard("a*");
 
         assertFalse(matchTail.matcher("").matches());
@@ -54,8 +52,7 @@ public class QualifiedNameMatcherTest
     }
 
     @Test
-    public void testHeadWildcard()
-    {
+    public void testHeadWildcard() {
         Pattern matchHead = QualifiedNameMatcher.compileWildcard("*d");
 
         assertFalse(matchHead.matcher("").matches());
@@ -66,8 +63,7 @@ public class QualifiedNameMatcherTest
     }
 
     @Test
-    public void testMiddleWildcard()
-    {
+    public void testMiddleWildcard() {
         Pattern matchMiddle = QualifiedNameMatcher.compileWildcard("H*d");
 
         assertFalse(matchMiddle.matcher("").matches());
@@ -76,8 +72,7 @@ public class QualifiedNameMatcherTest
     }
 
     @Test
-    public void testDoubleWildcard()
-    {
+    public void testDoubleWildcard() {
         Pattern matchDouble = QualifiedNameMatcher.compileWildcard("H*o, W*d");
 
         assertFalse(matchDouble.matcher("").matches());
@@ -88,8 +83,7 @@ public class QualifiedNameMatcherTest
     }
 
     @Test
-    public void testDots()
-    {
+    public void testDots() {
         Pattern matchDots = QualifiedNameMatcher.compileWildcard("org.apache");
 
         assertFalse(matchDots.matcher("org_apache").matches());
@@ -98,8 +92,7 @@ public class QualifiedNameMatcherTest
     }
 
     @Test
-    public void testQualifiedNameMatchers()
-    {
+    public void testQualifiedNameMatchers() {
         QualifiedName name = new QualifiedName("the.test.group", "just-an-artifact", null, null);
 
         QualifiedNameMatcher exact = QualifiedNameMatcher.fromQualifiedName(name);

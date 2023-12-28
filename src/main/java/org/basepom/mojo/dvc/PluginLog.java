@@ -11,36 +11,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.String.format;
 
 import org.apache.maven.shared.utils.logging.MessageBuilder;
 import org.apache.maven.shared.utils.logging.MessageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.String.format;
+public final class PluginLog {
 
-public final class PluginLog
-{
     private final Logger logger;
 
-    public PluginLog(final Class<?> clazz)
-    {
+    public PluginLog(final Class<?> clazz) {
         checkNotNull(clazz, "clazz is null");
         this.logger = LoggerFactory.getLogger(clazz);
     }
 
-    public void debug(final String fmt, final Object... args)
-    {
+    public void debug(final String fmt, final Object... args) {
         checkNotNull(fmt, "fmt is null");
         synchronized (logger) {
             logger.debug(format(fmt, args));
         }
     }
 
-    public void debug(final Throwable t, final String fmt, final Object... args)
-    {
+    public void debug(final Throwable t, final String fmt, final Object... args) {
         checkNotNull(fmt, "fmt is null");
         checkNotNull(t, "t is null");
         synchronized (logger) {
@@ -48,16 +46,14 @@ public final class PluginLog
         }
     }
 
-    public void info(final String fmt, final Object... args)
-    {
+    public void info(final String fmt, final Object... args) {
         checkNotNull(fmt, "fmt is null");
         synchronized (logger) {
             logger.info(format(fmt, args));
         }
     }
 
-    public void info(final Throwable t, final String fmt, final Object... args)
-    {
+    public void info(final Throwable t, final String fmt, final Object... args) {
         checkNotNull(fmt, "fmt is null");
         checkNotNull(t, "t is null");
         synchronized (logger) {
@@ -65,8 +61,7 @@ public final class PluginLog
         }
     }
 
-    public void warn(final String fmt, final Object... args)
-    {
+    public void warn(final String fmt, final Object... args) {
         checkNotNull(fmt, "fmt is null");
         MessageBuilder mb = MessageUtils.buffer();
         synchronized (logger) {
@@ -74,8 +69,7 @@ public final class PluginLog
         }
     }
 
-    public void warn(final Throwable t, final String fmt, final Object... args)
-    {
+    public void warn(final Throwable t, final String fmt, final Object... args) {
         checkNotNull(fmt, "fmt is null");
         checkNotNull(t, "t is null");
         MessageBuilder mb = MessageUtils.buffer();
@@ -84,8 +78,7 @@ public final class PluginLog
         }
     }
 
-    public void error(final String fmt, final Object... args)
-    {
+    public void error(final String fmt, final Object... args) {
         checkNotNull(fmt, "fmt is null");
         MessageBuilder mb = MessageUtils.buffer();
         synchronized (logger) {
@@ -93,8 +86,7 @@ public final class PluginLog
         }
     }
 
-    public void error(final Throwable t, final String fmt, final Object... args)
-    {
+    public void error(final Throwable t, final String fmt, final Object... args) {
         checkNotNull(fmt, "fmt is null");
         checkNotNull(t, "t is null");
         MessageBuilder mb = MessageUtils.buffer();
@@ -103,12 +95,10 @@ public final class PluginLog
         }
     }
 
-    public void report(final boolean quiet, final String fmt, final Object... args)
-    {
+    public void report(final boolean quiet, final String fmt, final Object... args) {
         if (quiet) {
             debug(fmt, args);
-        }
-        else {
+        } else {
             info(fmt, args);
         }
     }

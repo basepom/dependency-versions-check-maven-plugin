@@ -11,7 +11,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc.mojo;
+
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableSetMultimap.toImmutableSetMultimap;
+
+import org.basepom.mojo.dvc.AbstractDependencyVersionsMojo;
+import org.basepom.mojo.dvc.QualifiedName;
+import org.basepom.mojo.dvc.dependency.DependencyMap;
+import org.basepom.mojo.dvc.strategy.Strategy;
+import org.basepom.mojo.dvc.version.VersionResolutionCollection;
+import org.basepom.mojo.dvc.version.VersionResolutionElement;
+
+import java.util.function.Function;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -25,27 +38,16 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.shared.utils.logging.MessageBuilder;
 import org.apache.maven.shared.utils.logging.MessageUtils;
-import org.basepom.mojo.dvc.AbstractDependencyVersionsMojo;
-import org.basepom.mojo.dvc.QualifiedName;
-import org.basepom.mojo.dvc.dependency.DependencyMap;
-import org.basepom.mojo.dvc.strategy.Strategy;
-import org.basepom.mojo.dvc.version.VersionResolutionCollection;
-import org.basepom.mojo.dvc.version.VersionResolutionElement;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.version.Version;
-
-import java.util.function.Function;
-
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.ImmutableSetMultimap.toImmutableSetMultimap;
 
 /**
  * Resolves all dependencies of a project and reports version conflicts.
  */
 @Mojo(name = "check", requiresProject = true, threadSafe = true, defaultPhase = LifecyclePhase.VERIFY, requiresDependencyResolution = ResolutionScope.NONE)
 public class DependencyVersionsCheckMojo
-        extends AbstractDependencyVersionsMojo
-{
+        extends AbstractDependencyVersionsMojo {
+
     /**
      * List only dependencies in conflict or all dependencies.
      *
@@ -63,8 +65,8 @@ public class DependencyVersionsCheckMojo
     protected boolean conflictsFailBuild = false;
 
     /**
-     * Fail the build only if a version conflict involves one or more direct dependencies. Direct dependency versions are controlled
-     * by the project itself so any conflict here can be fixed by changing the version in the project.
+     * Fail the build only if a version conflict involves one or more direct dependencies. Direct dependency versions are controlled by the project itself so
+     * any conflict here can be fixed by changing the version in the project.
      * <br>
      * It is strongly recommended to review and fix these conflicts.
      *
@@ -75,8 +77,7 @@ public class DependencyVersionsCheckMojo
 
     @Override
     protected void doExecute(final ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> resolutionMap, final DependencyMap rootDependencyMap)
-            throws Exception
-    {
+            throws Exception {
         // filter out what to display.
         final var filteredMap = ImmutableMap.copyOf(Maps.filterValues(
                 resolutionMap.asMap(),
@@ -159,11 +160,9 @@ public class DependencyVersionsCheckMojo
 
                 if (hasConflictVersion) {
                     mb.failure(paddedVersion);
-                }
-                else if (perfectMatch) {
+                } else if (perfectMatch) {
                     mb.success(paddedVersion);
-                }
-                else {
+                } else {
                     mb.a(paddedVersion);
                 }
 
@@ -177,8 +176,7 @@ public class DependencyVersionsCheckMojo
 
                     if (versionResolutionElement.isDirectDependency()) {
                         mb.strong("*" + name + "*");
-                    }
-                    else {
+                    } else {
                         mb.a(name);
                     }
                     if (it.hasNext()) {
@@ -200,11 +198,9 @@ public class DependencyVersionsCheckMojo
 
             if (willFail) {
                 log.error("%s", mb);
-            }
-            else if (willWarn) {
+            } else if (willWarn) {
                 log.warn("%s", mb);
-            }
-            else {
+            } else {
                 log.info("%s", mb);
             }
         }

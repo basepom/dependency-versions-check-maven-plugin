@@ -11,21 +11,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.basepom.mojo.dvc.strategy;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.function.Function.identity;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.function.Function.identity;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Default implementation for {@link StrategyProvider}.
@@ -33,20 +33,18 @@ import static java.util.function.Function.identity;
 @Named("default")
 @Singleton
 public class DefaultStrategyProvider
-        implements StrategyProvider
-{
+        implements StrategyProvider {
+
     @Inject
     protected List<Strategy> resolverDefinitions = ImmutableList.of();
 
     @Override
-    public ImmutableMap<String, Strategy> getStrategies()
-    {
+    public ImmutableMap<String, Strategy> getStrategies() {
         return resolverDefinitions.stream().collect(ImmutableMap.toImmutableMap(r -> r.getName().toLowerCase(Locale.ENGLISH), identity()));
     }
 
     @Override
-    public Strategy forName(final String name)
-    {
+    public Strategy forName(final String name) {
         checkNotNull(name, "name is null");
 
         final Map<String, Strategy> strategies = getStrategies();
