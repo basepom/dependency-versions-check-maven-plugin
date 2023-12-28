@@ -18,7 +18,7 @@
     <parent>
         <groupId>org.basepom</groupId>
         <artifactId>basepom-oss</artifactId>
-        <version>53</version>
+        <version>56</version>
     </parent>
 
     <groupId>org.basepom.maven</groupId>
@@ -82,14 +82,11 @@
     </issueManagement>
 
     <properties>
-        <!-- maven 3.9.x insanity -->
-        <maven.plugin.validation>BRIEF</maven.plugin.validation>
-
         <project.build.targetJdk>11</project.build.targetJdk>
         <project.moduleName>org.basepom.mojo.dvc</project.moduleName>
 
-        <basepom.nexus-staging.staging-url>https://oss.sonatype.org/</basepom.nexus-staging.staging-url>
-        <basepom.release.profiles>basepom.oss-release,plugin-release</basepom.release.profiles>
+        <basepom.javadoc.legacy-mode>true</basepom.javadoc.legacy-mode>
+        <basepom.release.profiles>basepom.deploy-release,plugin-release</basepom.release.profiles>
         <basepom.release.tag-name-format>dependency-versions-check-maven-plugin-@{project.version}</basepom.release.tag-name-format>
 
         <basepom.site.skip>false</basepom.site.skip>
@@ -98,11 +95,15 @@
         <basepom.site.scm.skip-deploy>false</basepom.site.scm.skip-deploy>
         <basepom.site.scm.url>scm:git:https://github.com/basepom/basepom.github.io.git</basepom.site.scm.url>
 
+        <!-- remove after basepom 57 -->
+        <dep.spotbugs.version>4.8.3</dep.spotbugs.version>
+        <dep.plugin.spotbugs.version>4.8.2.0</dep.plugin.spotbugs.version>
+
         <!-- site requires full javadoc generation -->
         <basepom.javadoc.skip>false</basepom.javadoc.skip>
 
-        <dep.guava.version>31.1-jre</dep.guava.version>
-        <dep.junit5.version>5.9.3</dep.junit5.version>
+        <dep.guava.version>33.0.0-jre</dep.guava.version>
+        <dep.junit5.version>5.10.1</dep.junit5.version>
         <dep.slf4j.version>1.7.36</dep.slf4j.version>
 
         <!-- Maven API version. Keep on 3.8.x for now -->
@@ -111,11 +112,11 @@
         <dep.maven-resolver.version>1.6.3</dep.maven-resolver.version>
 
         <!-- other maven stuff -->
-        <dep.plexus.version>2.1.1</dep.plexus.version>
+        <dep.plexus.version>2.2.0</dep.plexus.version>
         <dep.maven-shared-utils.version>3.4.2</dep.maven-shared-utils.version>
 
         <!-- plugin tooling -->
-        <dep.plugin.plugin.version>3.9.0</dep.plugin.plugin.version>
+        <dep.plugin.plugin.version>3.10.2</dep.plugin.plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -151,13 +152,13 @@
             <dependency>
                 <groupId>org.codehaus.plexus</groupId>
                 <artifactId>plexus-classworlds</artifactId>
-                <version>2.6.0</version>
+                <version>2.8.0</version>
             </dependency>
 
             <dependency>
                 <groupId>org.codehaus.plexus</groupId>
                 <artifactId>plexus-utils</artifactId>
-                <version>3.5.1</version>
+                <version>4.0.0</version>
             </dependency>
             <!-- end dependency convergence help -->
 
@@ -283,6 +284,7 @@
                     <artifactId>plexus-component-metadata</artifactId>
                     <version>${dep.plexus.version}</version>
                 </plugin>
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
@@ -376,7 +378,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration combine.children="append">
+                <configuration>
                     <author>false</author>
                     <detectJavaApiLink>true</detectJavaApiLink>
                     <linksource>true</linksource>
