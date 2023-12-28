@@ -13,7 +13,8 @@
  */
 package org.basepom.mojo.dvc.strategy;
 
-import org.codehaus.plexus.component.annotations.Component;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 /**
  * Relaxed variant of APR, very suitable for Java code. It is assumed that for every non-backwards compatible change, the artifactId
@@ -24,7 +25,8 @@ import org.codehaus.plexus.component.annotations.Component;
  * By using the APR parser, the major version flags forwards compatibility, the minor and patch are not used. If a qualifier is present,
  * it must match.
  */
-@Component(role = Strategy.class, hint = "two-digits-backward-compatible")
+@Named("two-digits-backward-compatible")
+@Singleton
 public class TwoDigitsBackwardCompatibleVersionStrategy
         extends AprVersionStrategy
 {

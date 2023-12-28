@@ -16,7 +16,9 @@ package org.basepom.mojo.dvc.strategy;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
-import org.codehaus.plexus.component.annotations.Component;
+
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -25,7 +27,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <p>
  * e.g. used for google guava.
  */
-@Component(role = Strategy.class, hint = "single-digit")
+@Named("single-digit")
+@Singleton
 public class SingleDigitVersionStrategy
         implements Strategy
 {

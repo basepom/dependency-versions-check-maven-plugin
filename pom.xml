@@ -122,12 +122,6 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.codehaus.plexus</groupId>
-                <artifactId>plexus-component-annotations</artifactId>
-                <version>${dep.plexus.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.apache.maven.shared</groupId>
                 <artifactId>maven-shared-utils</artifactId>
                 <version>${dep.maven-shared-utils.version}</version>
@@ -221,12 +215,6 @@
             <groupId>org.apache.maven.resolver</groupId>
             <artifactId>maven-resolver-api</artifactId>
             <version>${dep.maven-resolver.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.codehaus.plexus</groupId>
-            <artifactId>plexus-component-annotations</artifactId>
             <scope>provided</scope>
         </dependency>
 

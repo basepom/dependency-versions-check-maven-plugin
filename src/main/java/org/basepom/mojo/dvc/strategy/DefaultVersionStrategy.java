@@ -14,14 +14,17 @@
 package org.basepom.mojo.dvc.strategy;
 
 import org.apache.maven.artifact.versioning.ComparableVersion;
-import org.codehaus.plexus.component.annotations.Component;
+
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 /**
  * This is the default versioning strategy used by previous versions of the plugin.
  * It assumes that all smaller versions are compatible when replaced with larger numbers and compares version
  * elements from left to right. E.g. 3.2.1 &gt; 3.2 and 2.1.1 &gt; 1.0. Usually works pretty ok.
  */
-@Component(role = Strategy.class, hint = "default")
+@Named("default")
+@Singleton
 public class DefaultVersionStrategy
         implements Strategy
 {

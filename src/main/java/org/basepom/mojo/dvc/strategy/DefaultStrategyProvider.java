@@ -15,8 +15,10 @@ package org.basepom.mojo.dvc.strategy;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 import java.util.List;
 import java.util.Locale;
@@ -28,11 +30,12 @@ import static java.util.function.Function.identity;
 /**
  * Default implementation for {@link StrategyProvider}.
  */
-@Component(role = StrategyProvider.class)
+@Named("default")
+@Singleton
 public class DefaultStrategyProvider
         implements StrategyProvider
 {
-    @Requirement(role = Strategy.class)
+    @Inject
     protected List<Strategy> resolverDefinitions = ImmutableList.of();
 
     @Override
@@ -41,6 +44,7 @@ public class DefaultStrategyProvider
         return resolverDefinitions.stream().collect(ImmutableMap.toImmutableMap(r -> r.getName().toLowerCase(Locale.ENGLISH), identity()));
     }
 
+    @Override
     public Strategy forName(final String name)
     {
         checkNotNull(name, "name is null");

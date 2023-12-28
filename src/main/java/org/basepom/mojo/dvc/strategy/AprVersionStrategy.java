@@ -17,8 +17,9 @@ import com.google.common.base.Strings;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
-import org.basepom.mojo.dvc.PluginLog;
-import org.codehaus.plexus.component.annotations.Component;
+
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 import java.util.Comparator;
 
