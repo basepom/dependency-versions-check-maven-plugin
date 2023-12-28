@@ -28,6 +28,9 @@ install::
 install-fast:: MAVEN_CONFIG += -Pfast
 install-fast:: install
 
+install-notests:: MAVEN_CONFIG += -DskipTests
+install-notests:: install
+
 run-tests::
 	${MAVEN} surefire:test
 
@@ -44,10 +47,12 @@ release-docs:: MAVEN_CONFIG += -Pplugin-release
 release-docs:: deploy-docs
 
 help::
-	@echo " * clean        - clean local build tree"
-	@echo " * install      - installs build result in the local maven repository"
-	@echo " * deploy       - installs build result in the snapshot OSS repository"
-	@echo " * test         - run unit tests"
-	@echo " * deploy-site  - builds and deploys the documentation site"
-	@echo " * release      - release a new version to maven central"
-	@echo " * release-docs - run from release directory to deploy new doc site"
+	@echo " * clean           - clean local build tree"
+	@echo " * install         - installs build result in the local maven repository"
+	@echo " * install-fast    - like install, but do not run tests and checkers"
+	@echo " * install-notests - like install, but do not run tests"
+	@echo " * deploy          - installs build result in the snapshot OSS repository"
+	@echo " * test            - run unit tests"
+	@echo " * deploy-site     - builds and deploys the documentation site"
+	@echo " * release         - release a new version to maven central"
+	@echo " * release-docs    - run from release directory to deploy new doc site"
