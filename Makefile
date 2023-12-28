@@ -43,8 +43,8 @@ deploy-site::
 release::
 	${MAVEN} clean release:clean release:prepare release:perform
 
-release-docs:: MAVEN_CONFIG += -Pplugin-release
-release-docs:: deploy-docs
+release-site:: MAVEN_CONFIG += -Pplugin-release
+release-site:: deploy-site
 
 help::
 	@echo " * clean           - clean local build tree"
@@ -55,4 +55,4 @@ help::
 	@echo " * test            - run unit tests"
 	@echo " * deploy-site     - builds and deploys the documentation site"
 	@echo " * release         - release a new version to maven central"
-	@echo " * release-docs    - run from release directory to deploy new doc site"
+	@echo " * release-site    - run from release directory to deploy new doc site"
