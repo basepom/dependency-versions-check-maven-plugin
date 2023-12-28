@@ -4,7 +4,10 @@ This is the changelog for the maven dependency versions check plugin. It follows
 
 ## 4.0.1 - 2023-12-27
 
-* Ignore SNAPSHOT releases when a dependency declares a version range.
+### Fixed
+
+* Ignore SNAPSHOT releases for dependencies when a dependency declares a version range.
+
 
 ## 4.0.0 - 2023-05-19
 
