@@ -16,9 +16,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.basepom</groupId>
-        <artifactId>basepom-oss</artifactId>
-        <version>56</version>
+        <groupId>org.kitei</groupId>
+        <artifactId>kitei-root</artifactId>
+        <version>15</version>
     </parent>
 
     <groupId>org.basepom.maven</groupId>

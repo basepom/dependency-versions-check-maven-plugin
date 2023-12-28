@@ -32,17 +32,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <p>
  * If an additional qualifier exists, the qualifiers must match.
  */
-@Component(role = Strategy.class, hint = "apr")
+@Named("apr")
+@Singleton
 public class AprVersionStrategy
         implements Strategy
 {
-    private final Comparator<ArtifactVersion> COMPARATOR = Comparator
-            .comparing(ArtifactVersion::getMajorVersion, (a, e) -> checkMajorCompatible(a, e))
-            .thenComparing(ArtifactVersion::getMinorVersion, (a, e) -> checkMinorCompatible(a, e))
-            .thenComparing(ArtifactVersion::getIncrementalVersion, (a, e) -> checkPatchCompatible(a, e))
+    private final Comparator<ArtifactVersion> comparator = Comparator
+            .comparing(ArtifactVersion::getMajorVersion, this::checkMajorCompatible)
+            .thenComparing(ArtifactVersion::getMinorVersion, this::checkMinorCompatible)
+            .thenComparing(ArtifactVersion::getIncrementalVersion, this::checkPatchCompatible)
             .thenComparing(ArtifactVersion::getQualifier, (a, e) -> checkQualifierCompatible(Strings.nullToEmpty(a), Strings.nullToEmpty(e)));
-
-    protected final PluginLog LOG = new PluginLog(this.getClass());
 
     @Override
     public String getName()
@@ -64,7 +63,7 @@ public class AprVersionStrategy
         //  0 means more testing.
         //  1 means compatible.
         //
-        return COMPARATOR.compare(aprExpectedVersion, aprResolvedVersion) >= 0; // more testing or compatible wins here.
+        return comparator.compare(aprExpectedVersion, aprResolvedVersion) >= 0; // more testing or compatible wins here.
     }
 
     protected int checkMajorCompatible(int expectedMajor, int resolvedMajor)

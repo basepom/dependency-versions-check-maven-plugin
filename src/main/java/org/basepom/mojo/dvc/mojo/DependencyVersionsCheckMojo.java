@@ -73,6 +73,7 @@ public class DependencyVersionsCheckMojo
     @Parameter(defaultValue = "false", property = "dvc.direct-conflicts-fail-build")
     protected boolean directConflictsFailBuild = false;
 
+    @Override
     protected void doExecute(final ImmutableSetMultimap<QualifiedName, VersionResolutionCollection> resolutionMap, final DependencyMap rootDependencyMap)
             throws Exception
     {
@@ -99,7 +100,7 @@ public class DependencyVersionsCheckMojo
                     return report;
                 }));
 
-        LOG.report(quiet, "Checking %s%s dependencies%s for '%s' scope%s",
+        log.report(quiet, "Checking %s%s dependencies%s for '%s' scope%s",
                 (directOnly ? "direct" : "all"),
                 (managedOnly ? ", managed" : ""),
                 (deepScan ? " using deep scan" : ""),
@@ -198,13 +199,13 @@ public class DependencyVersionsCheckMojo
             }
 
             if (willFail) {
-                LOG.error("%s", mb);
+                log.error("%s", mb);
             }
             else if (willWarn) {
-                LOG.warn("%s", mb);
+                log.warn("%s", mb);
             }
             else {
-                LOG.info("%s", mb);
+                log.info("%s", mb);
             }
         }
 

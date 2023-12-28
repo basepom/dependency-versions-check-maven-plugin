@@ -35,6 +35,7 @@ public final class CheckExclusionsFilter
     }
 
     @Override
+    @SuppressWarnings("PMD.AvoidBranchingStatementAsLastInLoop")
     public boolean accept(final DependencyNode node, final List<DependencyNode> parents)
     {
         checkNotNull(node, "node is null");

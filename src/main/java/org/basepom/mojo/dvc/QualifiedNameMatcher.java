@@ -46,7 +46,7 @@ public final class QualifiedNameMatcher
     {
         checkNotNull(pattern, "pattern is null");
         final List<String> elements = Splitter.on(':').trimResults().splitToList(pattern);
-        checkState(elements.size() > 0 && elements.size() < 3, "Pattern %s is not a valid inclusion pattern!", pattern);
+        checkState(!elements.isEmpty() && elements.size() < 3, "Pattern %s is not a valid inclusion pattern!", pattern);
 
         this.groupPattern = compileWildcard(elements.get(0).trim());
         this.artifactPattern = compileWildcard(elements.size() > 1 ? elements.get(1).trim() : ""); // use wildcard match if no artifact present

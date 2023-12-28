@@ -74,7 +74,7 @@ public final class DependencyVersionsListMojo
                     return report;
                 }));
 
-        LOG.report(quiet, "%s%s dependencies%s for '%s' scope%s:",
+        log.report(quiet, "%s%s dependencies%s for '%s' scope%s:",
                 (directOnly ? "Direct" : "All"),
                 (managedOnly ? " managed" : ""),
                 (deepScan ? " using deep scan" : ""),
@@ -153,7 +153,7 @@ public final class DependencyVersionsListMojo
                 mb.a(")");
             }
 
-            LOG.info("%s", mb);
+            log.info("%s", mb);
         }
     }
 }

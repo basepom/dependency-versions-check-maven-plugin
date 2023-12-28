@@ -62,7 +62,7 @@ public abstract class AbstractDependencyVersionsMojo
             JavaScopes.RUNTIME,
             JavaScopes.TEST);
 
-    protected final PluginLog LOG = new PluginLog(this.getClass());
+    protected final PluginLog log = new PluginLog(this.getClass());
 
     @Parameter(defaultValue = "${project}", readonly = true)
     public MavenProject project;
@@ -246,6 +246,8 @@ public abstract class AbstractDependencyVersionsMojo
     protected StrategyCache strategyCache;
     protected RepositorySystemSession snapshotFilteredSession;
 
+    @Override
+    @SuppressWarnings("PMD.AvoidRethrowingException")
     public void execute()
             throws MojoExecutionException, MojoFailureException
     {
@@ -257,16 +259,16 @@ public abstract class AbstractDependencyVersionsMojo
             checkState(!Strings.nullToEmpty(scope).trim().isEmpty() && VALID_SCOPES.contains(scope), "Scope '%s' is invalid", scope);
 
             if (skip) {
-                LOG.report(quiet, "Skipping plugin execution");
+                log.report(quiet, "Skipping plugin execution");
                 return;
             }
 
             if (!includePomProjects && "pom".equals(project.getPackaging())) {
-                LOG.report(quiet, "Ignoring POM project");
+                log.report(quiet, "Ignoring POM project");
                 return;
             }
 
-            LOG.debug("Starting %s mojo run!", this.getClass().getSimpleName());
+            log.debug("Starting %s mojo run!", this.getClass().getSimpleName());
 
             this.strategyCache = new StrategyCache(strategyProvider, resolvers, defaultStrategy);
             this.snapshotFilteredSession = new DefaultRepositorySystemSession(mavenSession.getRepositorySession())
@@ -288,7 +290,7 @@ public abstract class AbstractDependencyVersionsMojo
             throw new MojoExecutionException("While running mojo: ", e);
         }
         finally {
-            LOG.debug("Ended %s mojo run!", this.getClass().getSimpleName());
+            log.debug("Ended %s mojo run!", this.getClass().getSimpleName());
         }
     }
 

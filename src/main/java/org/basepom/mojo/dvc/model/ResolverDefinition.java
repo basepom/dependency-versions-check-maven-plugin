@@ -34,6 +34,7 @@ public final class ResolverDefinition
         this.strategy = checkNotNull(strategy, "strategyName is null");
     }
 
+    @SuppressWarnings("PMD.UseVarargs") // called by maven, don't use varargs
     public void setIncludes(final String[] includes)
     {
         checkNotNull(includes, "includes is null");
