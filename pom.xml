@@ -98,13 +98,15 @@
         <!-- site requires full javadoc generation -->
         <basepom.javadoc.skip>false</basepom.javadoc.skip>
 
-        <dep.guava.version>33.0.0-jre</dep.guava.version>
-        <dep.junit5.version>5.10.1</dep.junit5.version>
+        <dep.guava.version>33.3.0-jre</dep.guava.version>
+        <dep.junit5.version>5.11.0</dep.junit5.version>
         <dep.slf4j.version>1.7.36</dep.slf4j.version>
+        <dep.sisu-inject.version>0.9.0.M3</dep.sisu-inject.version>
+        <dep.plexus-utils.version>4.0.1</dep.plexus-utils.version>
 
         <!-- Maven API version. Keep on 3.8.x for now -->
-        <dep.maven-api.version>3.8.7</dep.maven-api.version>
-        <!-- keep on 1.6 for maven 3.8 compatibility - see https://maven.apache.org/resolver/maven-3.8.x.html -->
+        <dep.maven-api.version>3.8.8</dep.maven-api.version>
+        <!-- keep on 1.6 for maven 3.8 compatibility - see https://maven.apache.org/resolver/api-compatibility.html -->
         <dep.maven-resolver.version>1.6.3</dep.maven-resolver.version>
 
         <!-- other maven stuff -->
@@ -112,7 +114,7 @@
         <dep.maven-shared-utils.version>3.4.2</dep.maven-shared-utils.version>
 
         <!-- plugin tooling -->
-        <dep.plugin.plugin.version>3.10.2</dep.plugin.plugin.version>
+        <dep.plugin.plugin.version>3.15.0</dep.plugin.plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -136,7 +138,7 @@
             <dependency>
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>org.eclipse.sisu.inject</artifactId>
-                <version>0.3.5</version>
+                <version>${dep.sisu-inject.version}</version>
             </dependency>
 
             <dependency>
@@ -148,7 +150,7 @@
             <dependency>
                 <groupId>org.codehaus.plexus</groupId>
                 <artifactId>plexus-utils</artifactId>
-                <version>4.0.0</version>
+                <version>${dep.plexus-utils.version}</version>
             </dependency>
             <!-- end dependency convergence help -->
 
