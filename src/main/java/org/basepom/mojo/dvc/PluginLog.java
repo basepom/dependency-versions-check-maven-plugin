@@ -17,6 +17,9 @@ package org.basepom.mojo.dvc;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.apache.maven.shared.utils.logging.MessageBuilder;
 import org.apache.maven.shared.utils.logging.MessageUtils;
 import org.slf4j.Logger;
@@ -25,6 +28,7 @@ import org.slf4j.LoggerFactory;
 public final class PluginLog {
 
     private final Logger logger;
+    private final Lock instanceLock = new ReentrantLock();
 
     public PluginLog(final Class<?> clazz) {
         checkNotNull(clazz, "clazz is null");
@@ -33,39 +37,54 @@ public final class PluginLog {
 
     public void debug(final String fmt, final Object... args) {
         checkNotNull(fmt, "fmt is null");
-        synchronized (logger) {
+        try {
+            instanceLock.lock();
             logger.debug(format(fmt, args));
+        } finally {
+            instanceLock.unlock();
         }
     }
 
     public void debug(final Throwable t, final String fmt, final Object... args) {
         checkNotNull(fmt, "fmt is null");
         checkNotNull(t, "t is null");
-        synchronized (logger) {
+        try {
+            instanceLock.lock();
             logger.debug(format(fmt, args), t);
+        } finally {
+            instanceLock.unlock();
         }
     }
 
     public void info(final String fmt, final Object... args) {
         checkNotNull(fmt, "fmt is null");
-        synchronized (logger) {
+        try {
+            instanceLock.lock();
             logger.info(format(fmt, args));
+        } finally {
+            instanceLock.unlock();
         }
     }
 
     public void info(final Throwable t, final String fmt, final Object... args) {
         checkNotNull(fmt, "fmt is null");
         checkNotNull(t, "t is null");
-        synchronized (logger) {
+        try {
+            instanceLock.lock();
             logger.info(format(fmt, args), t);
+        } finally {
+            instanceLock.unlock();
         }
     }
 
     public void warn(final String fmt, final Object... args) {
         checkNotNull(fmt, "fmt is null");
         MessageBuilder mb = MessageUtils.buffer();
-        synchronized (logger) {
+        try {
+            instanceLock.lock();
             logger.warn(mb.warning(format(fmt, args)).toString());
+        } finally {
+            instanceLock.unlock();
         }
     }
 
@@ -73,16 +92,22 @@ public final class PluginLog {
         checkNotNull(fmt, "fmt is null");
         checkNotNull(t, "t is null");
         MessageBuilder mb = MessageUtils.buffer();
-        synchronized (logger) {
+        try {
+            instanceLock.lock();
             logger.warn(mb.warning(format(fmt, args)).toString(), t);
+        } finally {
+            instanceLock.unlock();
         }
     }
 
     public void error(final String fmt, final Object... args) {
         checkNotNull(fmt, "fmt is null");
         MessageBuilder mb = MessageUtils.buffer();
-        synchronized (logger) {
+        try {
+            instanceLock.lock();
             logger.error(mb.failure(format(fmt, args)).toString());
+        } finally {
+            instanceLock.unlock();
         }
     }
 
@@ -90,8 +115,11 @@ public final class PluginLog {
         checkNotNull(fmt, "fmt is null");
         checkNotNull(t, "t is null");
         MessageBuilder mb = MessageUtils.buffer();
-        synchronized (logger) {
+        try {
+            instanceLock.lock();
             logger.error(mb.failure(format(fmt, args)).toString(), t);
+        } finally {
+            instanceLock.unlock();
         }
     }
 

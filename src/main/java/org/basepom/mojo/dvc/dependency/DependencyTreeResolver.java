@@ -36,6 +36,8 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -70,6 +72,8 @@ public final class DependencyTreeResolver
     private static final PluginLog LOG = new PluginLog(DependencyTreeResolver.class);
 
     private static final int DEPENDENCY_RESOLUTION_NUM_THREADS = Runtime.getRuntime().availableProcessors() * 5;
+
+    private final Lock collectorLock = new ReentrantLock();
 
     private final Context context;
     private final DependencyMap rootDependencyMap;
@@ -148,8 +152,8 @@ public final class DependencyTreeResolver
             for (final Dependency dependency : dependencies) {
                 try {
                     resolveProjectDependency(dependency, scopeFilter, collector);
-                } catch (Throwable t) {
-                    throwableBuilder.add(t);
+                } catch (Exception e) {
+                    throwableBuilder.add(e);
                 }
             }
         }
@@ -289,8 +293,11 @@ public final class DependencyTreeResolver
             LOG.debug("VersionResolution %s is excluded by configuration.", resolution);
         }
 
-        synchronized (collector) {
+        try {
+            collectorLock.lock();
             collector.put(requestingDependencyName, resolution);
+        } finally {
+            collectorLock.unlock();
         }
     }
 
@@ -350,8 +357,12 @@ public final class DependencyTreeResolver
                     resolution.conflict();
                 }
             }
-            synchronized (collector) {
+
+            try {
+                collectorLock.lock();
                 collector.put(dependencyName, resolution);
+            } finally {
+                collectorLock.unlock();
             }
         }
     }

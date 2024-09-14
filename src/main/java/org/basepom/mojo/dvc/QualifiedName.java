@@ -110,8 +110,8 @@ public final class QualifiedName
         ImmutableList.Builder<String> builder = ImmutableList.builder();
         builder.add(getGroupId()).add(getArtifactId());
 
-        getType().ifPresent(t -> builder.add(t));
-        getClassifier().ifPresent(t -> builder.add(t));
+        getType().ifPresent(builder::add);
+        getClassifier().ifPresent(builder::add);
         return Joiner.on(':').join(builder.build());
     }
 
