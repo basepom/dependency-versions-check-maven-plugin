@@ -95,10 +95,6 @@
         <basepom.site.scm.skip-deploy>false</basepom.site.scm.skip-deploy>
         <basepom.site.scm.url>scm:git:https://github.com/basepom/basepom.github.io.git</basepom.site.scm.url>
 
-        <!-- remove after basepom 57 -->
-        <dep.spotbugs.version>4.8.3</dep.spotbugs.version>
-        <dep.plugin.spotbugs.version>4.8.2.0</dep.plugin.spotbugs.version>
-
         <!-- site requires full javadoc generation -->
         <basepom.javadoc.skip>false</basepom.javadoc.skip>
 

@@ -15,7 +15,7 @@ SHELL = /bin/sh
 
 MAVEN = ./mvnw
 
-export MAVEN_OPTS MAVEN_CONFIG
+export MAVEN_OPTS MAVEN_ARGS
 
 default:: help
 
@@ -25,10 +25,10 @@ clean::
 install::
 	${MAVEN} clean install
 
-install-fast:: MAVEN_CONFIG += -Pfast
+install-fast:: MAVEN_ARGS += -Pfast
 install-fast:: install
 
-install-notests:: MAVEN_CONFIG += -DskipTests
+install-notests:: MAVEN_ARGS += -DskipTests
 install-notests:: install
 
 run-tests::
@@ -43,7 +43,7 @@ deploy-site::
 release::
 	${MAVEN} clean release:clean release:prepare release:perform
 
-release-site:: MAVEN_CONFIG += -Pplugin-release
+release-site:: MAVEN_ARGS += -Pplugin-release
 release-site:: deploy-site
 
 help::
