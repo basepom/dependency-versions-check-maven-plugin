@@ -101,7 +101,7 @@
         <dep.guava.version>33.3.0-jre</dep.guava.version>
         <dep.junit5.version>5.11.0</dep.junit5.version>
         <dep.slf4j.version>1.7.36</dep.slf4j.version>
-        <dep.sisu-inject.version>0.9.0.M3</dep.sisu-inject.version>
+        <dep.sisu.version>0.9.0.M3</dep.sisu.version>
         <dep.plexus-utils.version>4.0.1</dep.plexus-utils.version>
 
         <!-- Maven API version. Keep on 3.8.x for now -->
@@ -138,7 +138,7 @@
             <dependency>
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>org.eclipse.sisu.inject</artifactId>
-                <version>${dep.sisu-inject.version}</version>
+                <version>${dep.sisu.version}</version>
             </dependency>
 
             <dependency>
@@ -266,9 +266,9 @@
                 </plugin>
 
                 <plugin>
-                    <groupId>org.codehaus.plexus</groupId>
-                    <artifactId>plexus-component-metadata</artifactId>
-                    <version>${dep.plexus.version}</version>
+                    <groupId>org.eclipse.sisu</groupId>
+                    <artifactId>sisu-maven-plugin</artifactId>
+                    <version>${dep.sisu.version}</version>
                 </plugin>
 
                 <plugin>
@@ -307,12 +307,14 @@
             </plugin>
 
             <plugin>
-                <groupId>org.codehaus.plexus</groupId>
-                <artifactId>plexus-component-metadata</artifactId>
+                <groupId>org.eclipse.sisu</groupId>
+                <artifactId>sisu-maven-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>index-project</id>
                         <goals>
-                            <goal>generate-metadata</goal>
+                            <goal>main-index</goal>
+                            <goal>test-index</goal>
                         </goals>
                     </execution>
                 </executions>
