@@ -98,7 +98,7 @@
         <!-- site requires full javadoc generation -->
         <basepom.javadoc.skip>false</basepom.javadoc.skip>
 
-        <dep.guava.version>33.3.0-jre</dep.guava.version>
+        <dep.guava.version>33.5.0-jre</dep.guava.version>
         <dep.junit5.version>5.11.0</dep.junit5.version>
         <dep.slf4j.version>1.7.36</dep.slf4j.version>
         <dep.sisu.version>0.9.0.M3</dep.sisu.version>
