@@ -64,6 +64,7 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
+import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.AndDependencyFilter;
 
 public final class DependencyTreeResolver
@@ -193,6 +194,35 @@ public final class DependencyTreeResolver
         return d.getArtifact() + " [" + d.getScope() + (d.isOptional() ? ", optional" : "") + "]";
     }
 
+    static String selectDependencyScope(final String effectiveScope, final String declaredScope) {
+        if (effectiveScope != null && !effectiveScope.isEmpty()) {
+            return effectiveScope;
+        }
+        if (declaredScope != null && !declaredScope.isEmpty()) {
+            return declaredScope;
+        }
+        return JavaScopes.COMPILE;
+    }
+
+    /**
+     * Creates a transitive scope filter for a resolved project dependency.
+     * <p>
+     * Scope selection prefers the effective scope from the resolved dependency node (which includes inherited
+     * <code>dependencyManagement</code> settings), then falls back to the declared scope from the original dependency
+     * declaration, and finally defaults to <code>compile</code>.
+     * </p>
+     *
+     * @param projectDependencyNode The resolved dependency node from the project dependency graph.
+     * @param dependency            The corresponding declared project dependency.
+     * @return A transitive scope filter computed from the selected dependency scope.
+     */
+    static ScopeLimitingFilter createTransitiveScopeFilter(final DependencyNode projectDependencyNode, final Dependency dependency) {
+        final Dependency resolvedDependency = projectDependencyNode.getDependency();
+        final String effectiveScope = resolvedDependency == null ? null : resolvedDependency.getScope();
+        final String dependencyScopeName = selectDependencyScope(effectiveScope, dependency.getScope());
+        return ScopeLimitingFilter.computeTransitiveScope(dependencyScopeName);
+    }
+
     /**
      * Called for any direct project dependency. Factored out from {@link #computeResolutionMap} to allow parallel evaluation of dependencies to speed up the
      * process.
@@ -229,7 +259,7 @@ public final class DependencyTreeResolver
         try {
             // remove the test scope for resolving all the transitive dependencies. Anything that was pulled in in test scope,
             // now needs its dependencies resolved in compile+runtime scope, not test scope.
-            final ScopeLimitingFilter dependencyScope = ScopeLimitingFilter.computeTransitiveScope(dependency.getScope());
+            final ScopeLimitingFilter dependencyScope = createTransitiveScopeFilter(projectDependencyNode, dependency);
             computeVersionResolutionForTransitiveDependencies(collector, dependency, projectDependencyNode, dependencyScope);
         } catch (ProjectBuildingException e) {
             // This is an optimization and a bug workaround at the same time. Some artifacts exist that

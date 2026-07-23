@@ -93,11 +93,11 @@ public final class ScopeLimitingFilter
             case JavaScopes.RUNTIME:
             case COMPILE_PLUS_RUNTIME:
             case RUNTIME_PLUS_SYSTEM:
-                return scope;
-            case JavaScopes.TEST:
-                return COMPILE_PLUS_RUNTIME;
             case JavaScopes.PROVIDED:
-                return COMPILE_PLUS_RUNTIME; // remove test and provided
+            case JavaScopes.SYSTEM:
+            case JavaScopes.TEST:
+                // Transitive dependency analysis must only include scopes that can propagate.
+                return JavaScopes.RUNTIME;
             default:
                 throw new IllegalStateException("Scope '" + scope + "' is unknown!");
         }
